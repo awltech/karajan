@@ -2,6 +2,7 @@ package com.wordline.awltech.karajan.api;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 /**
@@ -22,6 +23,10 @@ public class BatchData<T> implements Serializable{
 	 */
 	public final static String Id = UUID.randomUUID().toString();
 	private List<T> data;
+	
+	public BatchData(){
+		data=new LinkedList<T>();
+	}
 	
 	public BatchData(List<T> data) {
 		this.data=data;
@@ -44,6 +49,21 @@ public class BatchData<T> implements Serializable{
 		return this.data.size();
 	}
 	
+	/**
+	 * 
+	 * @return List<T>
+	 * 				return data
+	 */
+	public List<T> getData(){
+		return this.data;
+	}
+	
+	/**
+	 * Delete the content of the BatchData
+	 */
+	public void clear(){
+		this.data.clear();
+	}
 	
 	
 	

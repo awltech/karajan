@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.worldline.awltech.karajan</groupId>
+		<version>0.0.1-SNAPSHOT</version>
+		<artifactId>karajan-parent</artifactId>
+	</parent>
+	<artifactId>karajan-core</artifactId>
+
+	<build>
+		<!-- <testSourceDirectory>src/main/tests</testSourceDirectory> -->
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${java.source}</source>
+					<target>${java.target}</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor_2.10</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-testkit_2.10</artifactId>
+		</dependency>
+		<dependency>
+		      <groupId>junit</groupId>
+		      <artifactId>junit</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>com.worldline.awltech.karajan</groupId>
+			<artifactId>karajan-api</artifactId>
+			<version>${parent.version}</version>
+		</dependency>
+	</dependencies>
+
+
+</project>

@@ -22,17 +22,17 @@ import com.wordline.awltech.karajan.orchestrator.orchestrationutils.Behavior;
 public class Worker extends UntypedActor {
 
 	  public static Props props(ActorRef master, String workerId) {
-	    return Props.create(Worker.class, master);
+	    return Props.create(Worker.class, master,workerId);
 	  }
-
 	 
-     
+	
 	  private final ActorRef master;
 	  private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	  private final String workerId;
-
 	  private String currentWorkId = null;
-
+	  
+    
+      
 	  public Worker(ActorRef master, String workerId) {
 	    this.master = master;
 	    this.workerId=workerId;
@@ -66,10 +66,15 @@ public class Worker extends UntypedActor {
 	        Work work = (Work) message;
 	        log.debug("Got work: {}", work.job);
 	        currentWorkId = work.workId;
+	       
+	     // TODO Do the work and send the WorkComplete message to itself
+	        Integer result=(Integer)work.job;
+	        result*=5;
+	        getSelf().tell(new Worker.WorkComplete(result), getSelf());
 	        // the worker become busy
 	        getContext().become(working);
-	     // TODO Do the work and send the WorkComplete message to itself
-	        
+	     
+	       
 	      }
 	      else unhandled(message);
 	    }

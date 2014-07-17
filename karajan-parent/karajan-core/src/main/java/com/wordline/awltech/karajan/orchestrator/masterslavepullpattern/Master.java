@@ -15,14 +15,13 @@ import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.Scheduler;
-import akka.actor.SupervisorStrategy;
-import akka.actor.TypedActor;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 import com.wordline.awltech.karajan.api.BatchData;
 import com.wordline.awltech.karajan.model.Step;
+import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkFailed;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkIsDone;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkIsReady;
@@ -33,23 +32,36 @@ import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.Orchestra
 
 public class Master extends UntypedActor {
 
-	  LoggingAdapter log = Logging.getLogger(TypedActor.context().system(), this);
+	 private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	  Step step;
 	  
 	
 	  private HashMap<String, WorkerState> workers = new HashMap<String, WorkerState>();
 	  private Queue<Object> pendingWork;
 	  private Set<String> workIds = new LinkedHashSet<String>();
-	  private BatchData<Object> batchresult;
+	  private BatchData<Object> batchresult=new BatchData<Object>();
 	  private ActorRef orchestrator;
 	  private Scheduler scheduler = getContext().system().scheduler();
-	  private final SupervisorStrategy strategy;
+	//  private final SupervisorStrategy strategy;
 	  private int nbworker;
+	  //
+	  private final ActorStep stepInfo;
 	
-	  public Master(ActorRef orchestrator,int nbworker,SupervisorStrategy strategy) {
+	//  public Master(ActorRef orchestrator, int nbworker, SupervisorStrategy strategy) {
+	  public Master(ActorRef orchestrator,ActorStep stepinfo, int nbworker) {
 		this.orchestrator=orchestrator;
 	    this.nbworker=nbworker;
-	    this.strategy=strategy;
+	    this.stepInfo=stepinfo;
+	    //Initialization of the master
+	    for(int i=0;i<this.nbworker;i++){
+	    	String workerId=UUID.randomUUID().toString();
+	    	final ActorRef worker = getContext().actorOf(
+	    			Props.create(Worker.class,getSelf(),workerId));
+	    	//String workerId=UUID.randomUUID().toString();
+	    	workers.put(workerId, new WorkerState(worker,Idle.instance));
+	    	 log.debug("Worker created: {}", workerId);
+    	}
+	   // this.strategy=strategy;
 	  }
 	
 	  
@@ -87,13 +99,7 @@ public class Master extends UntypedActor {
 		   * his workers
 		   */
 	    if (message instanceof Initialization) {
-	    	for(int i=0;i<this.nbworker;i++){
-		    	final ActorRef worker = getContext().actorOf(
-		    			Props.create(Work.class), "worker"+i);
-		    	String workerId=UUID.randomUUID().toString();
-		    	workers.put(workerId, new WorkerState(worker,Idle.instance));
-		    	 log.debug("Worker created: {}", workerId);
-	    	}
+	    	
 	    }
 	    /**
 	     * Worker asks for work
@@ -127,7 +133,7 @@ public class Master extends UntypedActor {
 	    	if(noWorkerIsBusy()){
 	    		// There is no available work and all workers are idle
 	    		// Send batch processFinisg msg to orchestrator
-	    		orchestrator.tell(new BathcProcessFinished(batchresult), getSelf());
+	    		orchestrator.tell(new BatchProcessFinished(batchresult,this.stepInfo), getSelf());
 	    	}else{
 	    		// Master will wait 5s and check again if workers is busy or not
 	    		scheduler.scheduleOnce(Duration.create(5, TimeUnit.SECONDS),getSelf(),
@@ -148,7 +154,7 @@ public class Master extends UntypedActor {
 	        Work work = state.status.getWork();
 	        Object result = msg.result;
 	        batchresult.getData().add(result);
-	        log.debug("Work is done: {} => {} by worker {}", work, result, workerId);
+	        log.info("Work is done: {} => {} by worker {}", work, result, workerId);
 	        workers.put(workerId, state.copyWithStatus(Idle.instance));
 	        getSender().tell(new Ack(workId), getSelf());
 	      } else {
@@ -178,19 +184,18 @@ public class Master extends UntypedActor {
 	     * He convert BatchData to Queue in order to worker to pull data
 	     * And he notify worker that work is available
 	     */
-	    else if (message instanceof Work) {
-	      Work work = (Work) message;
-	      BatchData<?> batchdata=(BatchData<?>)work.job;
+	    else if (message instanceof Batch) {
+	      Batch batch = (Batch) message;
+	      BatchData<?> batchdata=(BatchData<?>)batch.data;
 	      batchresult.clear();
-	      if (workIds.contains(work.workId)) {
-	    	  getSender().tell(new Ack(work.workId), getSelf());
-	      } else {
-	        log.debug("Accepted work: {}", work);
+	     // orchestrator=getSender()
+	     
+	        log.debug("Accepted work: {}");
 	        pendingWork=new LinkedList<Object>(batchdata.getData());
-	        workIds.add(work.workId);
-	        getSender().tell(new Ack(work.workId), getSelf());
+	       // workIds.add(work.workId);
+	        getSender().tell(new Ack(batchdata.Id), getSelf());
 	        notifyWorkers();
-	      }
+	      
 	    }
 	  }
 	  /**
@@ -359,6 +364,27 @@ public class Master extends UntypedActor {
 	        '}';
 	    }
 	  }
+	  
+	  public static final class Batch implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3925833229453951L;
+	
+			
+		    public final BatchData<?> data;
+		
+		    public Batch(BatchData<?> data) {
+		      this.data=data;
+		    
+		    }
+		
+		    @Override
+		    public String toString() {
+		      return "Batch{}" ;
+		       
+		    }
+		  }
 	
 	  public static final class WorkResult implements Serializable {
 	    /**
@@ -385,13 +411,15 @@ public class Master extends UntypedActor {
 	 /**
 	  * End of batch processing message
 	 */
-	  public static final class BathcProcessFinished implements Serializable {
+	  public static final class BatchProcessFinished implements Serializable {
 		  
 		private static final long serialVersionUID = -5126089546165365492L;
 		public final BatchData<?> batchdata;
+		public final ActorStep  stepInfo;
 
-			public BathcProcessFinished(BatchData<?> batchdata) {
+			public BatchProcessFinished(BatchData<?> batchdata,ActorStep  stepInfo) {
 		          this.batchdata=batchdata;
+		          this.stepInfo=stepInfo;
 		    }
 	
 		    @Override

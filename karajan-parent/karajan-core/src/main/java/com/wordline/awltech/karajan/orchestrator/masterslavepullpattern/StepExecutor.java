@@ -11,18 +11,19 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
-import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.Master.Ack;
-import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.Master.Work;
+import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.Ack;
+import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.Work;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkIsDone;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkIsReady;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkerRequestsWork;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationutils.Behavior;
 
-public class Worker extends UntypedActor {
+public class StepExecutor extends UntypedActor {
 
 	  public static Props props(ActorRef master, String workerId) {
-	    return Props.create(Worker.class, master,workerId);
+	    return Props.create(StepExecutor.class, master,workerId);
 	  }
 	 
 	
@@ -33,9 +34,10 @@ public class Worker extends UntypedActor {
 	  
     
       
-	  public Worker(ActorRef master, String workerId) {
+	  public StepExecutor(ActorRef master, String workerId) {
 	    this.master = master;
 	    this.workerId=workerId;
+	    
 
 	  }
 
@@ -45,6 +47,10 @@ public class Worker extends UntypedActor {
 	    else
 	      throw new IllegalStateException("Not working");
 	  }
+	  @Override
+		public void preStart() throws Exception {
+			  master.tell(new OrchestratorMasterProtocol.Started(), getSelf());
+		}
  
 	  @Override
 	  public void postStop() {
@@ -67,10 +73,11 @@ public class Worker extends UntypedActor {
 	        log.debug("Got work: {}", work.job);
 	        currentWorkId = work.workId;
 	       
-	     // TODO Do the work and send the WorkComplete message to itself
+	     // TODO Do the work and send the WorkComplete message to itself use factory for loading implemented 
+	        //method
 	        Integer result=(Integer)work.job;
 	        result*=5;
-	        getSelf().tell(new Worker.WorkComplete(result), getSelf());
+	        getSelf().tell(new StepExecutor.WorkComplete(result), getSelf());
 	        // the worker become busy
 	        getContext().become(working);
 	     

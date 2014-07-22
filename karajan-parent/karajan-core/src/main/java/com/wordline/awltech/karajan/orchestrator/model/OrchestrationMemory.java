@@ -38,4 +38,21 @@ public class OrchestrationMemory {
 	public void  pushWork(int i,BatchData<?> data){
 		 memory.get(i).add(data);
 	}
+	/**
+	 * 
+	 * @param workerId
+	 * @return
+	 */
+	public boolean isAvailableWorkFor(int workerId){
+		return !memory.get(workerId).isEmpty();
+	}
+	public boolean isEmpty(){
+		for(int i=0;i<memory.size();i++){
+			if(!memory.get(i).isEmpty()){
+				return false;
+			}
+		}
+		return true;
+	}
+
 }

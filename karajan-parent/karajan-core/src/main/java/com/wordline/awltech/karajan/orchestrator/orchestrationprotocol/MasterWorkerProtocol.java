@@ -5,26 +5,6 @@ import java.io.Serializable;
 public abstract class MasterWorkerProtocol {
 
 	  // Messages from/to Workers
-
-	  public static final class RegisterWorker implements Serializable {
-	    /**
-		 * 
-		 */
-		private static final long serialVersionUID = 8558865759740489107L;
-		public final String workerId;
-
-	    public RegisterWorker(String workerId) {
-	      this.workerId = workerId;
-	    }
-
-	    @Override
-	    public String toString() {
-	      return "RegisterWorker{" +
-	        "workerId='" + workerId + '\'' +
-	        '}';
-	    }
-	  }
-
 	  public static final class WorkerRequestsWork implements Serializable {
 	    /**
 		 * 

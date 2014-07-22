@@ -21,15 +21,25 @@ public class BatchData<T> implements Serializable{
 	/**
 	 * Id used to identify the BatchData
 	 */
-	public final static String Id = UUID.randomUUID().toString();
+	private  String id;
 	private List<T> data;
 	
 	public BatchData(){
+		this.id= UUID.randomUUID().toString();
 		data=new LinkedList<T>();
 	}
 	
 	public BatchData(List<T> data) {
+		this.id= UUID.randomUUID().toString();
 		this.data=data;
+	}
+	/**
+	 * We need to clone only the id
+	 * @param batch
+	 */
+	public BatchData(BatchData<?> batch){
+		data=new LinkedList<T>();
+		this.id=batch.getId();
 	}
 	
 	/**
@@ -57,12 +67,23 @@ public class BatchData<T> implements Serializable{
 	public List<T> getData(){
 		return this.data;
 	}
-	
+	/**
+	 * 
+	 * @param data
+	 */
+	public void setData(List<T> data) {
+		this.data = data;
+	}
+
 	/**
 	 * Delete the content of the BatchData
 	 */
 	public void clear(){
 		this.data.clear();
+	}
+
+	public String getId() {
+		return id;
 	}
 	
 	

@@ -11,6 +11,7 @@ import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import akka.actor.Scheduler;
 import akka.actor.TypedActor;
 import akka.actor.TypedActor.PreStart;
 import akka.actor.TypedActor.Receiver;
@@ -20,6 +21,7 @@ import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExec
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.BatchProcessFinished;
 import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 import com.wordline.awltech.karajan.orchestrator.model.OrchestrationMemory;
+import com.wordline.awltech.karajan.orchestrator.model.StepMetrics;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchIsReady;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.EOFBatch;
@@ -44,13 +46,13 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 	protected  Set<String> batchDataIds = new LinkedHashSet<String>();
     private List<ActorStep> steps;
     private final ActorRef bathcproducer;
-    private int succesbatch;
     private int startedmanager;
-    BatchStatus batchstatus;
+    private BatchStatus batchstatus;
+    private Scheduler scheduler = TypedActor.context().system().scheduler();
+    
     public OrchestratorImpl(List<ActorStep> steps,ActorRef b) {
 		this.steps=steps;
 		this.bathcproducer=b;
-		succesbatch=0;
 		memory=new OrchestrationMemory(steps.size());
 		
 		
@@ -63,11 +65,16 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 		 * orchestrator receive BatchData from batchproducer
 		 */
 		if(message instanceof Batch){
+			//if(!batchstatus.name().equals(BatchStatus.RNNING)){
+				batchstatus=BatchStatus.RUNNING;
+			//}
 			Batch batch=(Batch)message;
 			// add BatchData to work
 			memory.pushWork(0, batch.data);
 			sender.tell(new BatchAck(batch.data.getId()), getSelf());
-			notifyManagers(steps.get(0).getName());
+			ManagerState state=managers.get(steps.get(0).getName());
+			notifyManagers(state.stepInfo.getName());
+			//state.stepmetrics.RECEIVED++;
 		}
 		/**
 		 * Orchestrator receive from worker that indicate that he finish
@@ -77,17 +84,20 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 			BatchProcessFinished msg=(BatchProcessFinished)message;
 			//get Successor Work reference
 			 ManagerState state = managers.get(msg.managerId);
+			// state.stepmetrics.PROCESSED++;
 			 if (state != null && state.status.isBusy()&& 
 					 state.status.getBatch().data.getId().equals(msg.batchdata.getId()) ) {
 				//
-				ActorStep succInfo=state.stepInfo.getSuccesor();
-					if(succInfo!=null){
+			    ActorStep succInfo=state.stepInfo.getSuccesor();
+					if(succInfo!=null ){
 						memory.pushWork(succInfo.getWorkRef(), msg.batchdata);
-						//Notify to next step worker that work is available
-						notifyManagers(succInfo.getName());
+						//Notify to next step worker that work is available if it is idle
+						ManagerState succstate=managers.get(succInfo.getName());
+						if(succstate.status.isIdle()){
+							notifyManagers(succInfo.getName());
+						}
 					}else{
 						//Update statistics about processed BatchData
-						this.succesbatch++;
 					}
 			        managers.put(msg.managerId, state.copyWithStatus(Idle.instance));
 			        sender.tell(new BatchAck(msg.batchdata.getId()), getSelf());
@@ -110,6 +120,8 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 				batchstatus=BatchStatus.COMPLETED;
 			}else{
 				//wait 5 s and check again if work is finished
+				scheduler.schedule(Duration.Zero(),Duration.create(1, "seconds"), getSelf(), 
+						new EOFBatch(),TypedActor.context().dispatcher(), getSelf());
 			}
 			
 		}
@@ -256,6 +268,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 		    public final ActorRef ref;
 		    public final ManagerStatus status;
 		    public final ActorStep stepInfo;
+		    public StepMetrics stepmetrics=new StepMetrics();
 		
 		    private ManagerState(ActorRef ref, ManagerStatus status,ActorStep stepinfo) {
 		      this.ref = ref;
@@ -347,6 +360,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 
 		@Override
 		public void preStart() {
+			this.batchstatus=BatchStatus.STARTING;
 			for(int i=0;i<steps.size();i++){
 				ActorStep step=steps.get(i);
 				ActorRef manager=TypedActor.context().actorOf(Props.create(StepExecutionManager.class,
@@ -356,16 +370,17 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 			
 		}
 
+		
 		@Override
-		public int getSuccessData() {
-			// TODO Auto-generated method stub
-			return this.succesbatch;
+		public StepMetrics getStepMetrics(String step) {
+			return managers.get(step).stepmetrics;
 		}
+
 
 		@Override
 		public BatchStatus getBatchStatus() {
 			// TODO Auto-generated method stub
-			return null;
+			return this.batchstatus;
 		}
 	
 }

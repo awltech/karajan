@@ -6,8 +6,7 @@ package com.wordline.awltech.karajan.runtime;
   *
   */
 public interface Metric {
-	public enum MetricType {READ_COUNT, WRITE_COUNT, READ_SKIP_COUNT, PROCESS_SKIP_COUNT, 
-	       WRITE_SKIP_COUNT}
+	public enum MetricType {RECEIVED, PROCESSED, SKIPPED, FAILLED}
 	/**
 	 * The getName method returns the metric type. 
 	 * @return metric type.

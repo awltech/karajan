@@ -1,7 +1,6 @@
 package com.wordline.awltech.karajan.runtime;
 
 import java.util.Date;
-import java.util.Properties;
 
 public interface JobExecution {
 	/**

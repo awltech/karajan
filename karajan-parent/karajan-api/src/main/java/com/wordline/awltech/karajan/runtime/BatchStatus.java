@@ -22,5 +22,5 @@ package com.wordline.awltech.karajan.runtime;
  * possible for a job.
  *
  */
-public enum BatchStatus {STARTING, RNNING, STOPPING, 
+public enum BatchStatus {STARTING, RUNNING, STOPPING, 
 			STOPPED, FAILED, COMPLETED, ABANDONED }

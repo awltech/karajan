@@ -28,14 +28,14 @@ public class OrchestrationMemory {
 	 * @param i
 	 * @return
 	 */
-	public BatchData<?> pullWork(int i){
+	public synchronized BatchData<?> pullWork(int i){
 		return memory.get(i).remove();
 	}
 	/**
 	 * 
 	 * @param i
 	 */
-	public void  pushWork(int i,BatchData<?> data){
+	public synchronized void  pushWork(int i,BatchData<?> data){
 		 memory.get(i).add(data);
 	}
 	/**
@@ -43,7 +43,7 @@ public class OrchestrationMemory {
 	 * @param workerId
 	 * @return
 	 */
-	public boolean isAvailableWorkFor(int workerId){
+	public synchronized boolean isAvailableWorkFor(int workerId){
 		return !memory.get(workerId).isEmpty();
 	}
 	public boolean isEmpty(){

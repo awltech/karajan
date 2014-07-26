@@ -110,17 +110,18 @@ public class StepExecutionManager extends UntypedActor {
 	     * Worker asks for work
 	     */
 	    else if (message instanceof WorkerRequestsWork) {
+	    	//System.out.println(id+" Finish value "+this.finished);
 	      WorkerRequestsWork msg = (WorkerRequestsWork) message;
 	      String workerId = msg.workerId;
 	      if (!pendingWork.isEmpty()) {
-	        WorkerState state = workers.get(workerId);
-	        if (state != null && state.status.isIdle()) {
-	           Object item= pendingWork.remove();
-	           Work work=new Work(UUID.randomUUID().toString(),item);
-	          log.debug("Giving worker {} some work {}", workerId, work.job);
-	          getSender().tell(work, getSelf());
-	          workers.put(workerId, state.copyWithStatus(new Busy(work, Duration.create(1,"second").fromNow())));
-	        }
+		        WorkerState state = workers.get(workerId);
+		        if (state != null && state.status.isIdle()) {
+		           Object item= pendingWork.remove();
+		           Work work=new Work(UUID.randomUUID().toString(),item);
+		          log.debug("Giving worker {} some work {}", workerId, work.job);
+		          getSender().tell(work, getSelf());
+		          workers.put(workerId, state.copyWithStatus(new Busy(work, Duration.Zero().fromNow())));
+		        }
 	        /**
 	         * There is no available work. Master verify that all workers has
 	         * finished their work in order to send batch finish message to 
@@ -132,13 +133,13 @@ public class StepExecutionManager extends UntypedActor {
 	       *  that mean they finished their work
 	       */
 	      else{
+	    	  this.finished+=1;
 	    	  //TODO delete CkeckForWorkersStatus
-	    	  if(this.finished==this.nbworker-1){
+	    	  if(this.finished==this.nbworker){
 	    		  currentbatch.setData(currentdata);
+	    		  System.out.println(currentdata+"   BACKBatchProcessFinished"+id+"Batch "+currentbatch.getSize());
 	    		  orchestrator.tell(new BatchProcessFinished(currentbatch,id), getSelf());
-	    	  }else{
-	    		  this.finished+=1;
-	    	  }  
+	    	  } 
 	      }
 	    }
 	    /**
@@ -152,6 +153,7 @@ public class StepExecutionManager extends UntypedActor {
 	      if (state != null && state.status.isBusy() && state.status.getWork().workId.equals(workId)) {
 	        Work work = state.status.getWork();
 	        Object result = msg.result;
+	       // System.out.println("Après traitement: "+result+" Manager "+id);
 	       // batchresult.getData().add(result);
 	        currentdata.add(result);
 	        log.debug("Work is done: {} => {} by worker {}", work, result, workerId);
@@ -193,8 +195,10 @@ public class StepExecutionManager extends UntypedActor {
 	      this.finished=0;
 	      log.debug("Accepted Batch: {}");
 	     // pendingWork=new LinkedList<Object>(batchdata.getData());
+	      System.out.println(id+" RECU "+batch.data.getData());
 	      pendingWork=new LinkedList<Object>(batch.data.getData());
-	    //  getSender().tell(new BatchAck(batchdata.Id), getSelf());
+	      
+	      getSender().tell(new BatchAck(batch.data.getId(),id), getSelf());
 	      notifyWorkers();
 	      
 	    }
@@ -220,6 +224,7 @@ public class StepExecutionManager extends UntypedActor {
 	   * Master notify all the workers that Works are available
 	   */
 	  private void notifyWorkers() {
+		 // System.out.println(id+" Notification "+pendingWork.size());
 	    if (!pendingWork.isEmpty()) {
 	      for (WorkerState state: workers.values()) {
 	        if (state.status.isIdle())

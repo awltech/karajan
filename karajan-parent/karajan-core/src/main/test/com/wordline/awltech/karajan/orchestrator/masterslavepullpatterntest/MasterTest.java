@@ -1,7 +1,6 @@
 package com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -15,8 +14,9 @@ import akka.actor.UntypedActor;
 import akka.testkit.JavaTestKit;
 
 import com.wordline.awltech.karajan.api.BatchData;
-import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.Master;
-import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.Master.BatchProcessFinished;
+import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl;
+import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager;
+import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.BatchProcessFinished;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkerRequestsWork;
 
 public class MasterTest {
@@ -32,8 +32,8 @@ public class MasterTest {
 		public static void setup() {
 			system = ActorSystem.create();
 			// Create Master
-			final Props props = Props.create(Master.class,null,5);
-			final ActorRef Master = system.actorOf(props);
+		//	final Props props = Props.create(StepExecutionManager.class,null,5);
+		//	final ActorRef Master = system.actorOf(props);
 			//Create worker
 		
 		}
@@ -48,11 +48,11 @@ public class MasterTest {
 		@Test
 		public void sendBatch() {
 		new JavaTestKit(system) {{
-				final Props props = Props.create(Master.class,getRef(),5);
+				final Props props = Props.create(StepExecutionManager.class,getRef(),null,5);
 				final ActorRef master= system.actorOf(props);
 				BatchData<Integer> data=new BatchData<Integer>();
-				master.tell(new Master.Batch(data), getRef());
-				expectMsgClass(Master.Ack.class);
+				master.tell(new OrchestratorImpl.Batch(data), getRef());
+				expectMsgClass(OrchestratorImpl.BatchAck.class);
 			}};
 			  
 		}
@@ -60,10 +60,10 @@ public class MasterTest {
 		@Test
 		public void sendBatchAck() {
 		new JavaTestKit(system) {{
-				final Props props = Props.create(Master.class,getRef(),5);
+				final Props props = Props.create(StepExecutionManager.class,getRef(),null,5);
 				final ActorRef master= system.actorOf(props);
 				BatchData<Integer> data=new BatchData<Integer>();
-				master.tell(new Master.Batch(data), getRef());
+				master.tell(new OrchestratorImpl.Batch(data), getRef());
 				receiveOne(Duration.Zero());
 			 //  Assert.assertEquals(expected.workId, data.Id);
 			}};
@@ -73,12 +73,12 @@ public class MasterTest {
 		@Test
 		public void requestForWorkWhenThereIsNoWork() {
 		new JavaTestKit(system) {{
-				final Props props = Props.create(Master.class,getRef(),5);
+				final Props props = Props.create(StepExecutionManager.class,getRef(),null,5);
 				final JavaTestKit probe = new JavaTestKit(system);
 				final ActorRef master= system.actorOf(props);
 				BatchData<Integer> data=new BatchData<Integer>();
 				//data.getData().add(5);
-				master.tell(new Master.Batch(data), probe.getRef());
+				master.tell(new OrchestratorImpl.Batch(data), probe.getRef());
 				master.tell(new WorkerRequestsWork(UUID.randomUUID().toString()), getRef());
 				//We expext Batch Process finish message
 				expectMsgClass(BatchProcessFinished.class);
@@ -89,11 +89,11 @@ public class MasterTest {
 		@Test
 		public void requestForWorkWhenThereIsWork() {
 		new JavaTestKit(system) {{
-			final Props props = Props.create(Master.class,getRef(),5);
+			final Props props = Props.create(StepExecutionManager.class,getRef(),null,5);
 			final ActorRef master= system.actorOf(props);
 			BatchData<Integer> data=new BatchData<Integer>();
 			data.getData().add(5);
-			master.tell(new Master.Batch(data), getRef());
+			master.tell(new OrchestratorImpl.Batch(data), getRef());
 			
 			
 			

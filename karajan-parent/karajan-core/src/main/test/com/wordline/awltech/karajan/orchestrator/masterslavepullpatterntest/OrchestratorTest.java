@@ -15,7 +15,6 @@ import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.BatchProducer;
 import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 import com.wordline.awltech.karajan.runtime.BatchStatus;
-import com.wordline.awltech.karajan.runtime.Metric.MetricType;
 
 
 
@@ -27,7 +26,7 @@ public class OrchestratorTest {
 		ActorSystem _system = ActorSystem.create("Karajan");
 		// Data to be processed
 		final List<Integer> data=new ArrayList<Integer>();
-		for(int i=0;i<100;i++){
+		for(int i=0;i<10;i++){
 			data.add(i+1);
 		}
 		
@@ -49,15 +48,15 @@ public class OrchestratorTest {
 						public OrchestratorImpl create() { return new OrchestratorImpl(model,batchproducer); }
 						}),
 						"orchestrator");	
-//		while(orchestrator.getBatchStatus()!=BatchStatus.COMPLETED){
-//			System.out.println(orchestrator.getBatchStatus());
-//		}
-//		if(orchestrator.getBatchStatus()==BatchStatus.COMPLETED){
-//			System.out.println("PROCESSED "+orchestrator.getStepMetrics("step1",MetricType.PROCESSED).PROCESSED);
-//			System.out.println("RECEIVED "+orchestrator.getStepMetrics("step1",MetricType.RECEIVED).RECEIVED);
-//			_system.shutdown();
-//		}
-//	
+		while(orchestrator.getBatchStatus()!=BatchStatus.COMPLETED){
+			System.out.println(orchestrator.getBatchStatus());
+		}
+		if(orchestrator.getBatchStatus()==BatchStatus.COMPLETED){
+			System.out.println("PROCESSED "+orchestrator.getStepMetrics("step1").PROCESSED);
+			System.out.println("RECEIVED "+orchestrator.getStepMetrics("step1").RECEIVED);
+			_system.shutdown();
+		}
+	
 			
 	
 	

@@ -19,6 +19,7 @@ public class ActorStep {
 	 */
 	private String name;
 	
+	
 	public ActorStep(String name,int capacity, ActorStep succ){
 		this.name=name;
 		this.succesor=succ;

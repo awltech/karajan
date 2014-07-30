@@ -38,9 +38,9 @@ public class StepExecutionManager extends UntypedActor {
 	  private HashMap<String, WorkerState> workers = new HashMap<String, WorkerState>();
 	  private Queue<Object> pendingWork;
 	  private Set<String> workIds = new LinkedHashSet<String>();
-	//  private BatchData<Object> batchresult=new BatchData<Object>();
-	  private BatchData<Object> currentbatch;
-	  List<Object> currentdata=new LinkedList<Object>();
+	  private BatchData<Object> batchresult;
+	 // private BatchData<Object> currentbatch;
+	//  List<Object> currentdata=new LinkedList<Object>();
 	  private ActorRef orchestrator;
 	  private String id;
 	//  private final SupervisorStrategy strategy;
@@ -136,9 +136,10 @@ public class StepExecutionManager extends UntypedActor {
 	    	  this.finished+=1;
 	    	  //TODO delete CkeckForWorkersStatus
 	    	  if(this.finished==this.nbworker){
-	    		  currentbatch.setData(currentdata);
-	    		  System.out.println(currentdata+"   BACKBatchProcessFinished"+id+"Batch "+currentbatch.getSize());
-	    		  orchestrator.tell(new BatchProcessFinished(currentbatch,id), getSelf());
+	    		 // currentbatch.setData(currentdata);
+	    		 // BatchData<Object> r=new BatchData<Object>(currentbatch);
+	    		 // r.setData(currentdata);
+	    		  orchestrator.tell(new BatchProcessFinished(batchresult,id), getSelf());
 	    	  } 
 	      }
 	    }
@@ -153,9 +154,9 @@ public class StepExecutionManager extends UntypedActor {
 	      if (state != null && state.status.isBusy() && state.status.getWork().workId.equals(workId)) {
 	        Work work = state.status.getWork();
 	        Object result = msg.result;
-	       // System.out.println("Après traitement: "+result+" Manager "+id);
-	       // batchresult.getData().add(result);
-	        currentdata.add(result);
+	        //System.out.println("Après traitement: "+result+" Manager "+id);
+	       batchresult.getData().add(result);
+	       // currentdata.add(result);
 	        log.debug("Work is done: {} => {} by worker {}", work, result, workerId);
 	        workers.put(workerId, state.copyWithStatus(Idle.instance));
 	        getSender().tell(new Ack(workId), getSelf());
@@ -188,16 +189,18 @@ public class StepExecutionManager extends UntypedActor {
 	     */
 	    else if (message instanceof Batch) {
 	      Batch batch = (Batch) message;
-	    //  BatchData<?> batchdata=(BatchData<?>)batch.data;
-	      currentbatch=new BatchData<Object>(batch.data);
-	    //  batchresult.clear();
-	      currentdata.clear();
+	      BatchData<?> batchdata=(BatchData<?>)batch.data;
+	     // currentbatch=new BatchData<Object>(batch.data);
+	     // batchresult.clear();
+	      batchresult=new BatchData<Object>();
+	      batchresult.cloneId(batchdata);
+	    //  currentdata.clear();
 	      this.finished=0;
 	      log.debug("Accepted Batch: {}");
-	     // pendingWork=new LinkedList<Object>(batchdata.getData());
+	     pendingWork=new LinkedList<Object>(batchdata.getData());
 	      System.out.println(id+" RECU "+batch.data.getData());
-	      pendingWork=new LinkedList<Object>(batch.data.getData());
-	      
+	     // pendingWork=new LinkedList<Object>(batch.data.getData());
+	      System.out.println(id+" Pending "+pendingWork);
 	      getSender().tell(new BatchAck(batch.data.getId(),id), getSelf());
 	      notifyWorkers();
 	      

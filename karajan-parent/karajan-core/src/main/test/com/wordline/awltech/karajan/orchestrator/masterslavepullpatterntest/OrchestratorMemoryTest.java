@@ -1,5 +1,7 @@
 package com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest;
 
+import java.util.List;
+
 import junit.framework.Assert;
 
 import org.junit.AfterClass;
@@ -59,6 +61,15 @@ public class OrchestratorMemoryTest {
 		BatchData<?> result= memory.pullWork(1);
 		Assert.assertTrue(result instanceof BatchData);
 		
+	}
+	
+	@Test
+	public void batchDataSize(){
+		List<Integer> l=new java.util.LinkedList<Integer>();
+		l.add(5);
+		 BatchData<Integer> batch=new BatchData<Integer>(l);
+		memory.pushWork(1,batch);
+		Assert.assertEquals(1, memory.pullWork(1).getData().size());
 	}
 	
 }

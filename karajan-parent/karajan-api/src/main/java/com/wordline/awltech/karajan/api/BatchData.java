@@ -81,6 +81,13 @@ public class BatchData<T> implements Serializable{
 	public void clear(){
 		this.data.clear();
 	}
+	/**
+	 * 
+	 * @param data
+	 */
+	public void cloneId(BatchData<?> data){
+		this.id=data.id;
+	}
 
 	public String getId() {
 		return id;

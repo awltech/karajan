@@ -5,9 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import com.wordline.awltech.karajan.api.BatchData;
+import akka.actor.UntypedActor;
 
-public class OrchestrationMemory {
+import com.wordline.awltech.karajan.api.BatchData;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.EOFBatch;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.PullWork;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.PullWorkResponse;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.PushWork;
+
+public class OrchestrationMemory extends UntypedActor{
 	/**
 	 * the size of the memory
 	 */
@@ -16,7 +22,6 @@ public class OrchestrationMemory {
 	 * 
 	 */
 	private List<Queue<BatchData<?> > > memory=new ArrayList<Queue<BatchData<?> > >();
-	
 	public OrchestrationMemory(int size) {
 		this.size=size;
 		for(int i=0;i<this.size;i++){
@@ -28,23 +33,42 @@ public class OrchestrationMemory {
 	 * @param i
 	 * @return
 	 */
-	public synchronized BatchData<?> pullWork(int i){
-		return memory.get(i).remove();
+	public  BatchData<?> pullWork(int i){
+		java.util.Iterator<BatchData<?>> it= memory.get(i).iterator();
+		System.out.println("===========Before PULL Memory State "+i+" =================== SIZE"+ memory.get(i).size());
+		while(it.hasNext()){
+			System.out.println(it.next().getData());
+		}
+		if(!memory.get(i).isEmpty() && memory.get(i).element().getData().size()!=0){
+			System.out.println("PULL RESULT"+i+" ----------->: "+memory.get(i).element().getData());
+			return memory.get(i).remove();
+		}
+		System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		return null;
 	}
 	/**
 	 * 
 	 * @param i
 	 */
-	public synchronized void  pushWork(int i,BatchData<?> data){
+	public void  pushWork(int i,BatchData<?> data){
+		 System.out.println("===========>>>>> DATA BEFORE INSERT"+ data.getData());
 		 memory.get(i).add(data);
+		// java.util.Iterator<BatchData<?>> it= memory.get(i).iterator();
+		 System.out.println("===========AFTER PUSH Memory State "+i+" ===================SIZE: "+ memory.get(i).size());
+			for(BatchData<?> d:memory.get(i)){
+				//System.out.println(System.identityHashCode(d.getData()));
+				System.out.println(d.getData());
+				
+				
+			}
 	}
 	/**
 	 * 
-	 * @param workerId
+	 * @param i
 	 * @return
 	 */
-	public synchronized boolean isAvailableWorkFor(int workerId){
-		return !memory.get(workerId).isEmpty();
+	public synchronized boolean isAvailableWorkFor(int i){
+		return (!memory.get(i).isEmpty());
 	}
 	public boolean isEmpty(){
 		for(int i=0;i<memory.size();i++){
@@ -53,6 +77,19 @@ public class OrchestrationMemory {
 			}
 		}
 		return true;
+	}
+	@Override
+	public void onReceive(Object message) throws Exception {
+		if(message instanceof PushWork){
+			PushWork msg=(PushWork)message;
+			pushWork(msg.id, msg.data);
+		}else if(message instanceof PullWork){
+			PullWork msg=(PullWork)message;
+			//BatchData<?> data=pullWork(msg.id);
+			getSender().tell(new PullWorkResponse(msg.id, pullWork(msg.id), msg.manager), getSelf());
+		}else if(message instanceof EOFBatch){
+			getSender().tell(new EOFBatch(isEmpty()), getSelf());
+		}
 	}
 
 }

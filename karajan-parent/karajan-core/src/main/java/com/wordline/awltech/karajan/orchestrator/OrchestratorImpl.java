@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -26,10 +25,12 @@ import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.Orchestra
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchIsReady;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.EOFBatch;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.ManagerRequestsBatch;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.PullWork;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.PullWorkResponse;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.PushWork;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.Run;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.Started;
 import com.wordline.awltech.karajan.runtime.BatchStatus;
-import com.wordline.awltech.karajan.runtime.Metric;
-import com.wordline.awltech.karajan.runtime.MetricImpl;
-import com.wordline.awltech.karajan.runtime.Metric.MetricType;
 import com.wordline.awltech.karajan.runtime.StepMetrics;
 
 /**
@@ -45,7 +46,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
     /**
      * orchestrator memory
      */
-    private OrchestrationMemory memory;
+    private ActorRef memory;
     protected  HashMap<String, ManagerState> managers = new HashMap<String, ManagerState>();
 	protected  Set<String> batchDataIds = new LinkedHashSet<String>();
     private List<ActorStep> steps;
@@ -57,7 +58,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
     public OrchestratorImpl(List<ActorStep> steps,ActorRef b) {
 		this.steps=steps;
 		this.bathcproducer=b;
-		memory=new OrchestrationMemory(steps.size());
+		memory=TypedActor.context().actorOf(Props.create(OrchestrationMemory.class,steps.size()));
 		
 		
 	}
@@ -74,11 +75,13 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 			//}
 			Batch batch=(Batch)message;
 			// add BatchData to work
-			memory.pushWork(0, batch.data);
+			//memory.pushWork(0, batch.data);
+			memory.tell(new PushWork(0, batch.data), getSelf());
 			sender.tell(new BatchAck(batch.data.getId()), getSelf());
 			ManagerState state=managers.get(steps.get(0).getName());
-			if(state.status.isIdle()){
+			if(state.status.isIdle()&&!state.waiting){
 				notifyManagers(state.stepInfo.getName());
+				state.waiting=true;
 			}
 		}
 		/**
@@ -89,19 +92,20 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 			BatchProcessFinished msg=(BatchProcessFinished)message;
 			//get Successor Work reference
 			 ManagerState state = managers.get(msg.managerId);
-			// state.stepmetrics.PROCESSED++;
-			 System.out.println(msg.managerId+" BatchProcessFinished"+msg.batchdata.getData());
-			 state.stepmetrics.PROCESSED.increment(1);
+			 state.metrics.PROCESSED++;
 			 if (state != null && state.status.isBusy()&&
 					 state.status.getBatch().data.getId().equals(msg.batchdata.getId()) ) {
 			    ActorStep succInfo=state.stepInfo.getSuccesor();
 					if(succInfo!=null ){
-						
-						memory.pushWork(succInfo.getWorkRef(), msg.batchdata);
+						BatchData<?> succbatch= msg.batchdata;
+						//memory.pushWork(succInfo.getWorkRef(),msg.batchdata);
+						System.out.println("Deposer: "+msg.batchdata.getData());
+						memory.tell(new PushWork(succInfo.getWorkRef(), succbatch), getSelf());
 						//Notify to next step worker that work is available if it is idle
 						ManagerState succstate=managers.get(succInfo.getName());
-						if(succstate.status.isIdle()){
+						if(succstate.status.isIdle()&&!succstate.waiting){
 							notifyManagers(succInfo.getName());
+							succstate.waiting=true;
 						}
 					}else{
 						//Update statistics about processed BatchData
@@ -122,12 +126,12 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 		else if(message instanceof EOFBatch){
 			//verify the memory if it is empty then wait for termination of worker
 			//then job is finish
-			
-			if(memory.isEmpty() && noManagerIsBusy()){
+			EOFBatch msg=(EOFBatch)message;
+			if(msg.endofbatch && noManagerIsBusy()){
 				batchstatus=BatchStatus.COMPLETED;
 			}else{
 				//wait 5 s and check again if work is finished
-				scheduler.schedule(Duration.Zero(),Duration.create(1, "seconds"), getSelf(), 
+				scheduler.schedule(Duration.Zero(),Duration.create(1, "seconds"), memory, 
 						new EOFBatch(),TypedActor.context().dispatcher(), getSelf());
 			}
 			
@@ -139,32 +143,45 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 			 System.out.println("ACK from "+msg.managerId);
 			 ManagerState state=managers.get(msg.managerId);
 			 if(state!=null){
-				 state.getStepMetrics().RECEIVED.increment(1);
+				 state.metrics.RECEIVED++;
 			 }
 		 }
 		/**
 		 * 
-		 */else if(message instanceof ManagerRequestsBatch){
+		 */
+		 else if(message instanceof ManagerRequestsBatch){
 			 ManagerRequestsBatch msg=(ManagerRequestsBatch)message;
 			 ManagerState state=managers.get(msg.masterId);
-			 System.out.println(msg.masterId+" Request!!!!Status "+state.status.toString());
-			 if (state != null && state.status.isIdle()&&
-					 (memory.isAvailableWorkFor(state.stepInfo.getWorkRef()))) {
-				 BatchData<?> data=memory.pullWork(state.stepInfo.getWorkRef());
-				 Batch batch=new Batch(data);
-				 sender.tell(batch, getSelf());
-			     managers.put(msg.masterId, state.copyWithStatus(new Busy(batch, Duration.Zero().fromNow())));
-				 
-			 }else{
-				 System.out.println("Fin de ^^^^^^"+msg.masterId);
+			 if (state != null && state.status.isIdle()) {
+				 state.waiting=true;
+				// managers.put(msg.masterId, state.copyWithStatus(new Busy(null, Duration.Zero().fromNow())));
+				 System.out.println(msg.masterId+" Request!!!!Status "+state.status.toString()+"Ref "+state.stepInfo.getWorkRef());
+				 memory.tell(new PullWork(state.stepInfo.getWorkRef(), msg.masterId), getSelf()); 
 			 }
 			
 		}
-		 else if(message instanceof OrchestratorMasterProtocol.Started){
+		 else if(message instanceof PullWorkResponse){
+			 PullWorkResponse msg=(PullWorkResponse)message;
+			 ManagerState state=managers.get(msg.manager);
+			 BatchData<?> data=msg.data;
+			 if(data!=null && state.waiting){
+				 Batch batch=new Batch(data);
+				 System.out.println(msg.manager+" Request!!!!Status "+state.status.toString()+"Data "+batch.data.getData());
+				 state.ref.tell(batch, getSelf());
+			     managers.put(msg.manager, state.copyWithStatus(new Busy(batch, Duration.Zero().fromNow())));
+			     state.waiting=false;
+			     
+			 }else{
+				// managers.put(msg.manager, state.copyWithStatus(Idle.instance));
+				 state.waiting=false;
+				 
+			 }
+		 }
+		 else if(message instanceof Started){
 			 
 		    	this.startedmanager+=1;
-		    	if(this.startedmanager==this.steps.size()) bathcproducer.tell(new OrchestratorMasterProtocol.Run(),getSelf());
-		    }
+		    	if(this.startedmanager==this.steps.size()) bathcproducer.tell(new Run(),getSelf());
+		 }
 		
 	}
 	
@@ -188,9 +205,8 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 	   */
 	  private void notifyManagers(String ref) {
 		  ManagerState state=managers.get(ref);
-	      if ( memory.isAvailableWorkFor(state.stepInfo.getWorkRef())){
-	          state.ref.tell(BatchIsReady.getInstance(), getSelf());
-	      }
+	      state.ref.tell(BatchIsReady.getInstance(), getSelf());
+	    
 	     
 	  }
 	  
@@ -200,7 +216,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 	   */
 	  private boolean noManagerIsBusy(){
 		  for(Entry<String, ManagerState> entry : managers.entrySet()) {
-				if( entry.getValue().status.isBusy()){
+				if( entry.getValue().status.isBusy()||entry.getValue().waiting==true){
 					return false;
 				}
 		   }
@@ -281,7 +297,8 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 		    public final ActorRef ref;
 		    public final ManagerStatus status;
 		    public final ActorStep stepInfo;
-		    private  StepMetrics stepmetrics=new StepMetrics();
+		    public boolean waiting=false;
+		    public StepMetrics metrics=new StepMetrics();
 
 		
 		    private ManagerState(ActorRef ref, ManagerStatus status,ActorStep stepinfo) {
@@ -289,15 +306,17 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 		      this.status = status;
 		      this.stepInfo=stepinfo;
 		    }
-		    
+		    private ManagerState(ActorRef ref, ManagerStatus status,ActorStep stepinfo,StepMetrics metrics) {
+			      this.ref = ref;
+			      this.status = status;
+			      this.stepInfo=stepinfo;
+			      this.metrics=metrics;
+			    }
 		    private ManagerState copyWithStatus(ManagerStatus status) {
-		      return new ManagerState(this.ref, status,this.stepInfo);
+		      return new ManagerState(this.ref, status,this.stepInfo,this.metrics);
 		    }
 		    
-		    public StepMetrics getStepMetrics(){
-		    	return this.stepmetrics;
-		    }
-		    
+		  
 		    @Override
 		    public boolean equals(Object o) {
 		      if (this == o) return true;
@@ -329,11 +348,12 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 		  
 		  public static final class Batch implements Serializable {
 				/**
+			 * 
+			 */
+			private static final long serialVersionUID = -1549048184198441840L;
+				/**
 				 * 
 				 */
-				private static final long serialVersionUID = 3925833229453951L;
-			
-					
 				    public final BatchData<?> data;
 				
 				    public Batch(BatchData<?> data) {
@@ -395,8 +415,9 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 
 		
 		@Override
-		public StepMetrics getStepMetrics(String step,final Metric.MetricType name) {
-			return managers.get(step).getStepMetrics();
+		public StepMetrics getStepMetrics(String step) {
+			ManagerState manager=managers.get(step);
+			return manager.metrics;
 		}
 
 

@@ -2,6 +2,7 @@ package com.wordline.awltech.karajan.orchestrator.orchestrationprotocol;
 
 import java.io.Serializable;
 
+import com.wordline.awltech.karajan.api.BatchData;
 import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 
 public class OrchestratorMasterProtocol {
@@ -52,10 +53,20 @@ public class OrchestratorMasterProtocol {
 	 
 	 public static final class EOFBatch implements Serializable {
 		 /**
+		 * 
+		 */
+		private static final long serialVersionUID = 506415911739165041L;
+		/**
 		  * 
 		  */
-		private static final long serialVersionUID = 2785898030944263156L;
-		public EOFBatch() {}
+	
+		public final boolean endofbatch;
+		public EOFBatch(){
+			endofbatch=false;
+		}
+		public EOFBatch(boolean endofbatch) {
+			this.endofbatch=endofbatch;
+		}
 
 	    @Override
 	    public String toString() {
@@ -69,6 +80,11 @@ public class OrchestratorMasterProtocol {
 		 */
 		private static final long serialVersionUID = 5347565219262268210L;
 
+		/**
+		 * 
+		 */
+
+
 		public Waiting() {}
 
 	    @Override
@@ -81,7 +97,11 @@ public class OrchestratorMasterProtocol {
 		    /**
 		 * 
 		 */
-		private static final long serialVersionUID = 8792514851636013679L;
+		private static final long serialVersionUID = -2136154922331869786L;
+			/**
+		 * 
+		 */
+
 			public final String workerId;
 			public final ActorStep stepInfo;
 
@@ -103,6 +123,10 @@ public class OrchestratorMasterProtocol {
 		 * 
 		 */
 		private static final long serialVersionUID = -7619762607672268332L;
+			/**
+		 * 
+		 */
+
 			private static final BatchIsReady instance = new BatchIsReady();
 		    public static BatchIsReady getInstance() {
 		      return instance;
@@ -115,6 +139,10 @@ public class OrchestratorMasterProtocol {
 		 * 
 		 */
 		private static final long serialVersionUID = -5522751629474891773L;
+			/**
+		 * 
+		 */
+
 			public final String masterId;
 
 		    public ManagerRequestsBatch(String masterId) {
@@ -134,7 +162,12 @@ public class OrchestratorMasterProtocol {
 			/**
 		 * 
 		 */
-		private static final long serialVersionUID = -5522751629474891773L;
+		private static final long serialVersionUID = -2972401945326144043L;
+
+			/**
+		 * 
+		 */
+
 			//public final String masterId;
 
 		    public Started() {
@@ -148,5 +181,107 @@ public class OrchestratorMasterProtocol {
 		        '}';
 		    }
 		  }
+	  
+	  public static final class PullWork implements Serializable {
+			
+	
+			/**
+		 * 
+		 */
+		private static final long serialVersionUID = -3717018561848790314L;
+			/**
+		 * 
+		 */
+
+			public final int id;
+			public final String manager;
+
+		    public PullWork(int id,String manager) {
+		      this.id = id;
+		      this.manager=manager;
+		    }
+
+		    @Override
+		    public String toString() {
+		      return "PullWork{" +
+		        "MasterId='"  + '\'' +
+		        '}';
+		    }
+		  }
+	  
+	  public static final class PushWork implements Serializable {	
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4995943077536167832L;
+		/**
+		 * 
+		 */
+
+			public final int id;
+			public final BatchData<?> data;
+			
+
+		    public PushWork(int id,BatchData<?> data) {
+		      this.id = id;
+		      this.data=data;
+		    }
+
+		    @Override
+		    public String toString() {
+		      return "PushWork{" +
+		        "MasterId='"  + '\'' +
+		        '}';
+		    }
+		  }
+	  public static final class PullWorkResponse implements Serializable {	
+			/**
+		 * 
+		 */
+		private static final long serialVersionUID = -5336188236710815055L;
+			/**
+			 * 
+			 */
+
+				public final int id;
+				public final BatchData<?> data;
+				public final  String manager;
+
+			    public PullWorkResponse(int id,BatchData<?> data,String manager) {
+			      this.id = id;
+			      this.data=data;
+			      this.manager=manager;
+			    }
+
+			    @Override
+			    public String toString() {
+			      return "PushWork{" +
+			        "MasterId='"  + '\'' +
+			        '}';
+			    }
+			  }
+	  public static final class isAvailableWork implements Serializable {	
+			/**
+		 * 
+		 */
+		private static final long serialVersionUID = 329049270260587924L;
+			/**
+			 * 
+			 */
+
+				public final int id;
+
+			    public isAvailableWork(int id) {
+			      this.id = id;
+			    }
+
+			    @Override
+			    public String toString() {
+			      return "PushWork{" +
+			        "MasterId='"  + '\'' +
+			        '}';
+			    }
+			  }
+	  
 
 }

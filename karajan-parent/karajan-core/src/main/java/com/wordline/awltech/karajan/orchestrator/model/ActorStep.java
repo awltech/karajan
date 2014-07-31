@@ -19,11 +19,13 @@ public class ActorStep {
 	 */
 	private String name;
 	
+	private String implementation;
 	
-	public ActorStep(String name,int capacity, ActorStep succ){
+	public ActorStep(String name,int capacity, ActorStep succ, String implementation){
 		this.name=name;
 		this.succesor=succ;
 		this.capacity=capacity;
+		this.implementation=implementation;
 	}
 	
 	
@@ -60,6 +62,16 @@ public class ActorStep {
 
 	public void setCapacity(int capacity) {
 		this.capacity = capacity;
+	}
+
+
+	public String getImplementation() {
+		return implementation;
+	}
+
+
+	public void setImplementation(String implementation) {
+		this.implementation = implementation;
 	}
 
 

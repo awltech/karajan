@@ -32,9 +32,12 @@ public class OrchestratorTest {
 		
 		 
 		
+		String impl1="com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest.Implementation1";
+		String impl2="com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest.Implementation2"; 
+		
 		// instanciation of some steps
-		ActorStep s2=new ActorStep("step2",5, null);
-	    ActorStep s1=new ActorStep("step1",5, s2);
+		ActorStep s2=new ActorStep("step2",5, null,impl2);
+		ActorStep s1=new ActorStep("step1",5, s2,impl1);
 		//Model
 		final List<ActorStep> model=new ArrayList<ActorStep>();
 		s1.setWorkRef(0);model.add(s1);

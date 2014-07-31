@@ -1,6 +1,7 @@
 package com.wordline.awltech.karajan.orchestrator.masterslavepullpattern;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
@@ -11,6 +12,7 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+import com.wordline.awltech.karajan.api.ItemStepProcessor;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.Ack;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.Work;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol;
@@ -22,8 +24,8 @@ import com.wordline.awltech.karajan.orchestrator.orchestrationutils.Behavior;
 
 public class StepExecutor extends UntypedActor {
 
-	  public static Props props(ActorRef master, String workerId) {
-	    return Props.create(StepExecutor.class, master,workerId);
+	  public static Props props(ActorRef master, String workerId,String implementation) {
+	    return Props.create(StepExecutor.class, master,workerId,implementation);
 	  }
 	 
 	
@@ -31,12 +33,14 @@ public class StepExecutor extends UntypedActor {
 	  private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 	  private final String workerId;
 	  private String currentWorkId = null;
+	  private final String implementation;
 	  
     
       
-	  public StepExecutor(ActorRef master, String workerId) {
+	  public StepExecutor(ActorRef master, String workerId,String implementation) {
 	    this.master = master;
 	    this.workerId=workerId;
+	    this.implementation=implementation;
 	    
 
 	  }
@@ -75,9 +79,32 @@ public class StepExecutor extends UntypedActor {
 	       
 	     // TODO Do the work and send the WorkComplete message to itself use factory for loading implemented 
 	        //method
-	        Integer result=(Integer)work.job;
-	        result*=5;
-	        getSelf().tell(new StepExecutor.WorkComplete(result), getSelf());
+	        try {
+				// Get the Class
+				Class<?> userClass = Class.forName(implementation);
+				// Create an instance
+				ItemStepProcessor<?> p = (ItemStepProcessor<?>)userClass.newInstance();
+				// Get the method i want to call
+				Method method = userClass.getMethod("onProcessItem", Object.class);
+				// Call the method "onProcessItem(Integer item)" on the user instance implementation 
+				Object returnValue = method.invoke(p, work.job);
+				getSelf().tell(new StepExecutor.WorkComplete(returnValue), getSelf());
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+//	        Integer result=(Integer)work.job;
+//	        result*=5;
+	        
 	        // the worker become busy
 	        getContext().become(working);
 	     

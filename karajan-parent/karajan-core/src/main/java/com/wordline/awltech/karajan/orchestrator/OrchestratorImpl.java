@@ -93,13 +93,12 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 			//get Successor Work reference
 			 ManagerState state = managers.get(msg.managerId);
 			 state.metrics.PROCESSED++;
+			 System.out.println(msg.managerId+" BatchProcessFinished "+msg.batchdata.getData());
 			 if (state != null && state.status.isBusy()&&
 					 state.status.getBatch().data.getId().equals(msg.batchdata.getId()) ) {
 			    ActorStep succInfo=state.stepInfo.getSuccesor();
 					if(succInfo!=null ){
 						BatchData<?> succbatch= msg.batchdata;
-						//memory.pushWork(succInfo.getWorkRef(),msg.batchdata);
-						System.out.println("Deposer: "+msg.batchdata.getData());
 						memory.tell(new PushWork(succInfo.getWorkRef(), succbatch), getSelf());
 						//Notify to next step worker that work is available if it is idle
 						ManagerState succstate=managers.get(succInfo.getName());
@@ -407,7 +406,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 			for(int i=0;i<steps.size();i++){
 				ActorStep step=steps.get(i);
 				ActorRef manager=TypedActor.context().actorOf(Props.create(StepExecutionManager.class,
-						getSelf(),step.getName(),step.getCapacity()));
+						getSelf(),step.getName(),step.getCapacity(),step.getImplementation()));
 				 managers.put(step.getName(), new ManagerState(manager,Idle.instance,step));
 			}
 			

@@ -3,7 +3,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -39,6 +38,7 @@ public class StepExecutionManager extends UntypedActor {
 	  private Queue<Object> pendingWork;
 	  private Set<String> workIds = new LinkedHashSet<String>();
 	  private BatchData<Object> batchresult;
+	  private String implementation;
 	 // private BatchData<Object> currentbatch;
 	//  List<Object> currentdata=new LinkedList<Object>();
 	  private ActorRef orchestrator;
@@ -55,10 +55,11 @@ public class StepExecutionManager extends UntypedActor {
 	  private int finished=0;
 	 
 	//  public Master(ActorRef orchestrator, int nbworker, SupervisorStrategy strategy) {
-	  public StepExecutionManager(ActorRef orchestrator,String id, int nbworker) {
+	  public StepExecutionManager(ActorRef orchestrator,String id, int nbworker,String implementation) {
 		this.orchestrator=orchestrator;
 	    this.nbworker=nbworker;
 	    this.id=id;
+	    this.implementation=implementation;
 	   
 	   // this.strategy=strategy;
 	  }
@@ -69,7 +70,7 @@ public class StepExecutionManager extends UntypedActor {
 	    	 for(int i=0;i<this.nbworker;i++){
 	 	    	String workerId=UUID.randomUUID().toString();
 	 	    	final ActorRef worker = getContext().actorOf(
-	 	    			Props.create(StepExecutor.class,getSelf(),workerId));
+	 	    			Props.create(StepExecutor.class,getSelf(),workerId,implementation) );
 	 	    	workers.put(workerId, new WorkerState(worker,Idle.instance));
 	 	    	 log.debug("Manager created: {}", workerId);
 	     	}

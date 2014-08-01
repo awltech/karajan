@@ -1,5 +1,7 @@
 package com.wordline.awltech.karajan.api;
 
+import com.wordline.awltech.karajan.operations.WriterException;
+
 
 
 
@@ -11,13 +13,13 @@ public interface ItemStepWriter<I> {
 	 * @param BatchData the input of the Step as BatchData.
 	 * @throws Exception thrown for any errors. 
 	 */
-	public void onReceive(BatchData<I> batchdata) throws Exception;
+	public void onReceive(BatchData<I> batchdata) throws WriterException;
 	/**
 	 * Receive data as BatchData then write it to the output in Batch way
 	 * @param BatchData contents data to be wrote in the output.
 	 * @throws Exception is thrown for any errors.
 	 */
-	public void writeItems(BatchData<I> batchdata) throws Exception;
+	public void writeItems(BatchData<I> batchdata) throws WriterException;
 	
 	/**
 	 * The afterProcess method receives control after an item 
@@ -26,7 +28,7 @@ public interface ItemStepWriter<I> {
 	 * @param BatchData the result of the processed step as a Batch Data.
 	 * @throws Exception if an error occurs.
 	 */
-	public void afterProcess(BatchData<I> batchdata) throws Exception;
+	public void afterProcess(BatchData<I> batchdata) throws WriterException;
 	/**
 	 * 	Called before step restarted. Useful when you want to log you 
 	 *  step Execution

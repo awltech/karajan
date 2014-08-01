@@ -10,11 +10,16 @@ import java.util.Set;
 import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
+import akka.actor.AllForOneStrategy;
 import akka.actor.Props;
 import akka.actor.Scheduler;
+import akka.actor.SupervisorStrategy;
+import akka.actor.SupervisorStrategy.Directive;
 import akka.actor.TypedActor;
 import akka.actor.TypedActor.PreStart;
 import akka.actor.TypedActor.Receiver;
+import akka.actor.TypedActor.Supervisor;
+import akka.japi.Function;
 
 import com.wordline.awltech.karajan.api.BatchData;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager;
@@ -41,7 +46,7 @@ import com.wordline.awltech.karajan.runtime.StepMetrics;
  *
  */
 
-public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
+public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart, Supervisor {
 
     /**
      * orchestrator memory
@@ -62,6 +67,32 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart {
 		
 		
 	}
+    // Manage ALL error handling
+    private static SupervisorStrategy strategy =
+    		   // new OneForOneStrategy(10, Duration.create("1 minute"),
+    		    new AllForOneStrategy(10, Duration.create("1 minute"),
+    		    new Function<Throwable, Directive>() {
+    		    @Override
+    		    public Directive apply(Throwable t) {
+    			    if (t instanceof ArithmeticException) {
+    			    	return SupervisorStrategy.resume() ; 
+    			    } else if (t instanceof NullPointerException) {
+    			    	return SupervisorStrategy.stop();
+    			    } else if (t instanceof IllegalArgumentException) {
+    			    	return SupervisorStrategy.stop();
+    			    } else {
+    			    	return SupervisorStrategy.escalate();
+    			    }
+    		    }
+    		    });
+    	     
+    @Override
+    public SupervisorStrategy supervisorStrategy() {
+    return strategy;
+    }
+    
+    
+    
     
 	@Override
 	public void onReceive(Object message, ActorRef sender) {

@@ -24,18 +24,18 @@ public class Step {
 	/**
 	 * Number of thread used to lunch process
 	 */
-	int threads;
+	int parallelinstances;
 	/**
 	 * Errors management policy
 	 */
 	List<ErrorHandling> errorshandler=new ArrayList<ErrorHandling>();
 	
 	//Constructor
-	public Step(String id,Step succ, String ref, int threads) {
+	public Step(String id,Step succ, String ref, int parallelinstances) {
 	   this.id=id;
 	   this.successor=succ;
 	   this.ref=ref;
-	   this.threads=threads;
+	   this.parallelinstances=parallelinstances;
 	}
 
 	public String getId() {
@@ -62,12 +62,12 @@ public class Step {
 		this.ref = ref;
 	}
 
-	public int getThreads() {
-		return threads;
+	public int getParallelinstances() {
+		return parallelinstances;
 	}
 
-	public void setThreads(int threads) {
-		this.threads = threads;
+	public void setParallelinstances(int parallelinstances) {
+		this.parallelinstances = parallelinstances;
 	}
 
 	public List<ErrorHandling> getErrorshandler() {

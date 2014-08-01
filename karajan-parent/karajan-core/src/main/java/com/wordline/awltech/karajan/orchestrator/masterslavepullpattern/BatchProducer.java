@@ -7,6 +7,7 @@ import java.util.List;
 import akka.actor.UntypedActor;
 
 import com.wordline.awltech.karajan.api.BatchData;
+import com.wordline.awltech.karajan.operations.ReaderException;
 import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl;
 import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl.Batch;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.EOFBatch;
@@ -21,7 +22,7 @@ public class BatchProducer<T> extends UntypedActor {
     }
     
 	@Override
-	public void onReceive(Object message) throws Exception {
+	public void onReceive(Object message) throws RuntimeException {
 		if(message instanceof Run || message instanceof OrchestratorImpl.BatchAck){	
 			// There are no Data to extract
 			if(!iterator.hasNext()){
@@ -32,7 +33,7 @@ public class BatchProducer<T> extends UntypedActor {
 		}
 	
 	}
-	 private BatchData<?> extractBatch(int size){
+	 private BatchData<?> extractBatch(int size) throws ReaderException{
 		 List<T> data=new LinkedList<T>();
 		 int numofextrateditem=0;
 		 while(numofextrateditem<size && iterator.hasNext()){

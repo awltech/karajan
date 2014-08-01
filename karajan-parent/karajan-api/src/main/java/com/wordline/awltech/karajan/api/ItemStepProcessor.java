@@ -1,5 +1,7 @@
 package com.wordline.awltech.karajan.api;
 
+import com.wordline.awltech.karajan.operations.ProcessorException;
+
 
 public interface ItemStepProcessor<I> {
 	/**
@@ -8,7 +10,7 @@ public interface ItemStepProcessor<I> {
 	 * @param BatchData the input of the Step as BatchData.
 	 * @throws Exception thrown for any errors. 
 	 */
-	public void onReceive(BatchData<I> batchdata) throws Exception;
+	public void onReceive(BatchData<I> batchdata) throws ProcessorException;
 	
 	/**
 	 * The processItem accepts an input item 
@@ -20,7 +22,7 @@ public interface ItemStepProcessor<I> {
 	 * @return output item.
 	 * @throws Exception thrown for any errors. 
 	 */
-	public I onProcessItem(I item) throws Exception;
+	public I onProcessItem(I item) throws ProcessorException;
 	
 	/**
 	 * The afterProcess method receives control after an item 
@@ -29,7 +31,7 @@ public interface ItemStepProcessor<I> {
 	 * @param BatchData the result of the processed step as a Batch Data.
 	 * @throws Exception if an error occurs.
 	 */
-	public void afterProcess(BatchData<I> batchdata) throws Exception;
+	public void afterProcess(BatchData<I> batchdata) throws ProcessorException;
 	/**
 	 * 	Called before step restarted. Useful when you want to log you 
 	 *  step Execution

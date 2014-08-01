@@ -11,10 +11,14 @@ import scala.Option;
 import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
+import akka.actor.AllForOneStrategy;
 import akka.actor.Props;
+import akka.actor.SupervisorStrategy;
 import akka.actor.UntypedActor;
+import akka.actor.SupervisorStrategy.Directive;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.japi.Function;
 
 import com.wordline.awltech.karajan.api.BatchData;
 import com.wordline.awltech.karajan.model.Step;
@@ -39,8 +43,6 @@ public class StepExecutionManager extends UntypedActor {
 	  private Set<String> workIds = new LinkedHashSet<String>();
 	  private BatchData<Object> batchresult;
 	  private String implementation;
-	 // private BatchData<Object> currentbatch;
-	//  List<Object> currentdata=new LinkedList<Object>();
 	  private ActorRef orchestrator;
 	  private String id;
 	//  private final SupervisorStrategy strategy;
@@ -63,6 +65,33 @@ public class StepExecutionManager extends UntypedActor {
 	   
 	   // this.strategy=strategy;
 	  }
+	  
+	  // Manager ONE ErrorHandling
+	  private static SupervisorStrategy strategy =
+   		   // new OneForOneStrategy(10, Duration.create("1 minute"),
+   		    new AllForOneStrategy(10, Duration.create("1 minute"),
+   		    new Function<Throwable, Directive>() {
+   		    	
+   		    @Override
+   		    public Directive apply(Throwable t) {
+   			    if (t instanceof ArithmeticException) {
+   			    	return SupervisorStrategy.resume() ; 
+   			    } else if (t instanceof NullPointerException) {
+   			    	return SupervisorStrategy.stop();
+   			    } else if (t instanceof IllegalArgumentException) {
+   			    	return SupervisorStrategy.stop();
+   			    } else {
+   			    	return SupervisorStrategy.escalate();
+   			    }
+   		    }
+   		    });
+   	     
+	  
+	   @Override
+	   public SupervisorStrategy supervisorStrategy() {
+		   return strategy;
+	   }
+   
 	
 	  
 	    @Override

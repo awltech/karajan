@@ -30,8 +30,6 @@ public class OrchestratorTest {
 			data.add(i+1);
 		}
 		
-		 
-		
 		String impl1="com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest.Implementation1";
 		String impl2="com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest.Implementation2"; 
 		

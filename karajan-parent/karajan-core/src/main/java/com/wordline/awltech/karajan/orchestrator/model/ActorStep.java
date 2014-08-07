@@ -1,5 +1,9 @@
 package com.wordline.awltech.karajan.orchestrator.model;
 
+import java.util.List;
+
+import com.wordline.awltech.karajan.model.ErrorHandling;
+
 
 public class ActorStep {
 	/**
@@ -20,12 +24,24 @@ public class ActorStep {
 	private String name;
 	
 	private String implementation;
+	/**
+	 * 
+	 */
+	private List<ErrorHandling> handlederrors;
+	/**
+	 * 
+	 * @param name
+	 * @param capacity
+	 * @param succ
+	 * @param implementation
+	 */
 	
-	public ActorStep(String name,int capacity, ActorStep succ, String implementation){
+	public ActorStep(String name,int capacity, ActorStep succ, String implementation,List<ErrorHandling> handlederrors){
 		this.name=name;
 		this.succesor=succ;
 		this.capacity=capacity;
 		this.implementation=implementation;
+		this.handlederrors=handlederrors;
 	}
 	
 	
@@ -72,6 +88,16 @@ public class ActorStep {
 
 	public void setImplementation(String implementation) {
 		this.implementation = implementation;
+	}
+	
+	
+	public List<ErrorHandling> getHandlederrors() {
+		return handlederrors;
+	}
+
+
+	public void setHandlederrors(List<ErrorHandling> handlederrors) {
+		this.handlederrors = handlederrors;
 	}
 
 

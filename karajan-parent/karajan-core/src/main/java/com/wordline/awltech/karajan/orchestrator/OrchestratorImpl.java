@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.Duration;
@@ -22,11 +23,13 @@ import akka.actor.TypedActor.Supervisor;
 import akka.japi.Function;
 
 import com.wordline.awltech.karajan.api.BatchData;
+import com.wordline.awltech.karajan.model.Action;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.BatchProcessFinished;
 import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 import com.wordline.awltech.karajan.orchestrator.model.OrchestrationMemory;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchFail;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchIsReady;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.EOFBatch;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.ManagerRequestsBatch;
@@ -185,7 +188,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart, Supe
 			 if (state != null && state.status.isIdle()) {
 				 state.waiting=true;
 				// managers.put(msg.masterId, state.copyWithStatus(new Busy(null, Duration.Zero().fromNow())));
-				 System.out.println(msg.masterId+" Request!!!!Status "+state.status.toString()+"Ref "+state.stepInfo.getWorkRef());
+				// System.out.println(msg.masterId+" Request!!!!Status "+state.status.toString()+"Ref "+state.stepInfo.getWorkRef());
 				 memory.tell(new PullWork(state.stepInfo.getWorkRef(), msg.masterId), getSelf()); 
 			 }
 			
@@ -207,6 +210,27 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart, Supe
 				 
 			 }
 		 }
+		 /**
+	     * The StepManager send a message that mean Batch processing has failed
+	     */
+	    else if(message instanceof BatchFail){
+	    	BatchFail msg=(BatchFail)message;
+	    	//TODO send a message to the ErrorReplicator for saving the batch
+	    	 ManagerState state = managers.get(msg.managerId);
+			 if (state != null && state.status.isBusy() ) { 
+				 if(msg.action==Action.SKIPPE){
+					 managers.put(msg.managerId, state.copyWithStatus(Idle.instance));
+					System.out.println("------------->"+state.ref.path());
+					 sender.tell(new BatchAck(UUID.randomUUID().toString()), getSelf());
+				 }else if(msg.action==Action.RETRY){
+					// TODO add the batch to the orchestrator memory in order to be reprocessed 
+				 }
+				 
+				 
+			 }
+	    	
+	    		
+	    }
 		 else if(message instanceof Started){
 			 
 		    	this.startedmanager+=1;
@@ -437,7 +461,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart, Supe
 			for(int i=0;i<steps.size();i++){
 				ActorStep step=steps.get(i);
 				ActorRef manager=TypedActor.context().actorOf(Props.create(StepExecutionManager.class,
-						getSelf(),step.getName(),step.getCapacity(),step.getImplementation()));
+						getSelf(),step.getName(),step.getCapacity(),step.getImplementation(),step.getHandlederrors()));
 				 managers.put(step.getName(), new ManagerState(manager,Idle.instance,step));
 			}
 			

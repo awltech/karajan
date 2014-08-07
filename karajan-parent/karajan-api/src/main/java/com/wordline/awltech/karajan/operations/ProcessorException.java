@@ -6,6 +6,7 @@ public class ProcessorException extends BatchRuntimeException {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
 
 	public ProcessorException() {
 		// TODO Auto-generated constructor stub

@@ -3,6 +3,7 @@ package com.wordline.awltech.karajan.orchestrator.orchestrationprotocol;
 import java.io.Serializable;
 
 import com.wordline.awltech.karajan.api.BatchData;
+import com.wordline.awltech.karajan.model.Action;
 import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 
 public class OrchestratorMasterProtocol {
@@ -281,7 +282,30 @@ public class OrchestratorMasterProtocol {
 			        "MasterId='"  + '\'' +
 			        '}';
 			    }
-			  }
+	  }
+	  
+	  public static final class BatchFail implements Serializable{
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		public final BatchData<?> data;
+		public final String managerId;
+		public final Action action;
+		
+		public BatchFail(Action action) {
+			this.data=null;
+			this.managerId=null;
+			this.action=action;
+		}
+		public BatchFail(BatchData<?> data,Action action,String id){
+			this.data=data;
+			this.managerId=id;
+			this.action=action;
+		}
+		  
+	  }
 	  
 
 }

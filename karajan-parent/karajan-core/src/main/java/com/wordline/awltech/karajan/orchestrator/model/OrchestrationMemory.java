@@ -43,7 +43,6 @@ public class OrchestrationMemory extends UntypedActor{
 			System.out.println("PULL RESULT"+i+" ----------->: "+memory.get(i).element().getData());
 			return memory.get(i).remove();
 		}
-		System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		return null;
 	}
 	/**

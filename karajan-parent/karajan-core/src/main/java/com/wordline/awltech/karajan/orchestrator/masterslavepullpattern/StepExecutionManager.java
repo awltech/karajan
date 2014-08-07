@@ -3,15 +3,18 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import scala.Option;
 import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.AllForOneStrategy;
+import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
 import akka.actor.SupervisorStrategy;
 import akka.actor.UntypedActor;
@@ -21,7 +24,9 @@ import akka.event.LoggingAdapter;
 import akka.japi.Function;
 
 import com.wordline.awltech.karajan.api.BatchData;
+import com.wordline.awltech.karajan.model.ErrorHandling;
 import com.wordline.awltech.karajan.model.Step;
+import com.wordline.awltech.karajan.operations.ProcessorException;
 import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl.Batch;
 import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl.BatchAck;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkFailed;
@@ -29,7 +34,9 @@ import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWor
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkIsReady;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkerRequestsWork;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;
+import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchFail;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.Initialization;
+import com.wordline.awltech.karajan.runtime.CustomSupervisorStrategy;
 
 
 public class StepExecutionManager extends UntypedActor {
@@ -43,8 +50,10 @@ public class StepExecutionManager extends UntypedActor {
 	  private Set<String> workIds = new LinkedHashSet<String>();
 	  private BatchData<Object> batchresult;
 	  private String implementation;
+	  private BatchData<Object> currentbatch;
 	  private ActorRef orchestrator;
 	  private String id;
+	  private static  List<ErrorHandling> handlederrors;
 	//  private final SupervisorStrategy strategy;
 	  private int nbworker;
 	  /**
@@ -57,49 +66,34 @@ public class StepExecutionManager extends UntypedActor {
 	  private int finished=0;
 	 
 	//  public Master(ActorRef orchestrator, int nbworker, SupervisorStrategy strategy) {
-	  public StepExecutionManager(ActorRef orchestrator,String id, int nbworker,String implementation) {
+	  public StepExecutionManager(ActorRef orchestrator,String id, int nbworker,String implementation,List<ErrorHandling> errors) {
 		this.orchestrator=orchestrator;
 	    this.nbworker=nbworker;
 	    this.id=id;
 	    this.implementation=implementation;
+	    handlederrors=errors;
 	   
 	   // this.strategy=strategy;
 	  }
 	  
 	  // Manager ONE ErrorHandling
-	  private static SupervisorStrategy strategy =
-   		   // new OneForOneStrategy(10, Duration.create("1 minute"),
-   		    new AllForOneStrategy(10, Duration.create("1 minute"),
-   		    new Function<Throwable, Directive>() {
-   		    	
-   		    @Override
-   		    public Directive apply(Throwable t) {
-   			    if (t instanceof ArithmeticException) {
-   			    	return SupervisorStrategy.resume() ; 
-   			    } else if (t instanceof NullPointerException) {
-   			    	return SupervisorStrategy.stop();
-   			    } else if (t instanceof IllegalArgumentException) {
-   			    	return SupervisorStrategy.stop();
-   			    } else {
-   			    	return SupervisorStrategy.escalate();
-   			    }
-   		    }
-   		    });
-   	     
-	  
-	   @Override
-	   public SupervisorStrategy supervisorStrategy() {
-		   return strategy;
-	   }
-   
-	
-	  
+	  private static CustomSupervisorStrategy strategy = new CustomSupervisorStrategy();
+
+	    @Override
+	    public CustomSupervisorStrategy supervisorStrategy() {
+	    	CustomSupervisorStrategy.errors=handlederrors;
+	    	CustomSupervisorStrategy.stepexcmanager=getSelf();
+	        return strategy;
+	    }
+  
 	    @Override
 		public void preStart() {
 	    	 for(int i=0;i<this.nbworker;i++){
 	 	    	String workerId=UUID.randomUUID().toString();
 	 	    	final ActorRef worker = getContext().actorOf(
-	 	    			Props.create(StepExecutor.class,getSelf(),workerId,implementation) );
+	 	    			Props.create(StepExecutor.class,getSelf(),workerId,implementation),"executor"+i );
+//	 	    	final ActorRef worker = getContext().watch(getContext().actorOf(
+//	 	    			Props.create(StepExecutor.class,getSelf(),workerId,implementation),"executor"+i ));
 	 	    	workers.put(workerId, new WorkerState(worker,Idle.instance));
 	 	    	 log.debug("Manager created: {}", workerId);
 	     	}
@@ -163,6 +157,7 @@ public class StepExecutionManager extends UntypedActor {
 	       *  that mean they finished their work
 	       */
 	      else{
+	    	 // System.out.println("FINS!!!!!!!!!"+finished);
 	    	  this.finished+=1;
 	    	  //TODO delete CkeckForWorkersStatus
 	    	  if(this.finished==this.nbworker){
@@ -184,7 +179,7 @@ public class StepExecutionManager extends UntypedActor {
 	      if (state != null && state.status.isBusy() && state.status.getWork().workId.equals(workId)) {
 	        Work work = state.status.getWork();
 	        Object result = msg.result;
-	        //System.out.println("Après traitement: "+result+" Manager "+id);
+	      // System.out.println("Après traitement: "+result+" Manager "+id);
 	       batchresult.getData().add(result);
 	       // currentdata.add(result);
 	        log.debug("Work is done: {} => {} by worker {}", work, result, workerId);
@@ -205,12 +200,20 @@ public class StepExecutionManager extends UntypedActor {
 	      String workerId = msg.workerId;
 	      String workId = msg.workId;
 	      WorkerState state = workers.get(workerId);
-	      if (state != null && state.status.isBusy() && state.status.getWork().workId.equals(workId)) {
-	        log.debug("Work failed: {}", state.status.getWork());
-	        workers.put(workerId, state.copyWithStatus(Idle.instance));
-	        pendingWork.add(state.status.getWork());
-	        notifyWorkers();
-	      }
+	    //  log.info("Work failed: {}", state.status.isBusy());
+	      workers.put(workerId, state.copyWithStatus(Idle.instance));
+	      getSelf().tell(new WorkerRequestsWork(workerId),state.ref);
+	     // log.info("Work failed: {}", state.status.isBusy());
+	     // this.finished++;
+	     // System.out.println("Failed!!!!!!!!!"+finished);
+//	      if (state != null && state.status.isBusy() && state.status.getWork().workId.equals(workId)) {
+//	        log.info("Work failed: {}", state.status.getWork());
+//	        workers.put(workerId, state.copyWithStatus(Idle.instance));
+//	        this.finished++;
+////	        pendingWork.add(state.status.getWork());
+////	        notifyWorkers();
+//	        //state.ref.tell(new Ack(workId), getSelf());
+//	      }
 	    }
 	    /**
 	     * Master receive Work from Orchestrator as a BatchData
@@ -220,7 +223,7 @@ public class StepExecutionManager extends UntypedActor {
 	    else if (message instanceof Batch) {
 	      Batch batch = (Batch) message;
 	      BatchData<?> batchdata=(BatchData<?>)batch.data;
-	     // currentbatch=new BatchData<Object>(batch.data);
+	      this.currentbatch=new BatchData<Object>(batch.data);
 	     // batchresult.clear();
 	      batchresult=new BatchData<Object>();
 	      batchresult.cloneId(batchdata);
@@ -228,9 +231,9 @@ public class StepExecutionManager extends UntypedActor {
 	      this.finished=0;
 	      log.debug("Accepted Batch: {}");
 	     pendingWork=new LinkedList<Object>(batchdata.getData());
-	      System.out.println(id+" RECU "+batch.data.getData());
+	     System.out.println(id+" RECU "+batch.data.getData());
 	     // pendingWork=new LinkedList<Object>(batch.data.getData());
-	      System.out.println(id+" Pending "+pendingWork);
+	    //  System.out.println(id+" Pending "+pendingWork);
 	      getSender().tell(new BatchAck(batch.data.getId(),id), getSelf());
 	      notifyWorkers();
 	      
@@ -251,6 +254,14 @@ public class StepExecutionManager extends UntypedActor {
 	    		this.orchestrator.tell(new OrchestratorMasterProtocol.Started(), getSelf());
 	    	
 	    	}
+	    }
+	    /**
+	     * Batch fail while processing
+	     */
+	    else if(message instanceof BatchFail){
+	    	BatchFail msg=(BatchFail)message;
+	    	orchestrator.tell(new BatchFail(msg.data,msg.action,id), getSelf());
+	    	
 	    }
 	  }
 	  /**

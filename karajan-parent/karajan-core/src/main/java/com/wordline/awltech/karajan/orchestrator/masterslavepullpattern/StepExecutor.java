@@ -1,8 +1,10 @@
 package com.wordline.awltech.karajan.orchestrator.masterslavepullpattern;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import scala.Option;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -21,6 +23,7 @@ import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWor
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkerRequestsWork;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationutils.Behavior;
+import com.wordline.awltech.karajan.runtime.ProcessorException;
 
 public class StepExecutor extends UntypedActor {
 
@@ -54,6 +57,15 @@ public class StepExecutor extends UntypedActor {
 	  @Override
 		public void preStart() throws Exception {
 			  master.tell(new OrchestratorMasterProtocol.Started(), getSelf());
+		}
+	  
+		@Override
+		public void preRestart(Throwable reason, Option<Object> message)
+				throws Exception {
+			// TODO Auto-generated method stub
+			super.preRestart(reason, message);
+			
+			
 		}
  
 	  @Override
@@ -97,12 +109,23 @@ public class StepExecutor extends UntypedActor {
 			} catch (IllegalAccessException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (Exception e) {
+			} catch (InvocationTargetException e) {
+					throw new ProcessorException(workerId ,work.workId);
+				
+			}
+	        catch (Exception e) {
 				// TODO Auto-generated catch block
+				try {
+					throw e.getCause();
+				} catch (Throwable e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 			}
 			
 //	        Integer result=(Integer)work.job;
+//	        if(result==5) throw new ProcessorException();
 //	        result*=5;
 	        
 	        // the worker become busy

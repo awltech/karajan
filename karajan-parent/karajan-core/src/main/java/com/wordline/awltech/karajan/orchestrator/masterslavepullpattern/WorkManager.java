@@ -3,20 +3,15 @@ package com.wordline.awltech.karajan.orchestrator.masterslavepullpattern;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import scala.concurrent.duration.Deadline;
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 
 import com.wordline.awltech.karajan.api.BatchData;
 import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
-import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkIsReady;
 
 public abstract class WorkManager {
 	// protected final LoggingAdapter log = Logging.getLogger(getContext().system(), this);

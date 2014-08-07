@@ -14,7 +14,7 @@ public class Implementation1 implements ItemStepProcessor<Integer> {
 
 	@Override
 	public Integer onProcessItem(Integer item) throws ProcessorException {
-		// TODO Auto-generated method stub
+		if(item==3) throw new ProcessorException();
 		return item*2;
 	}
 

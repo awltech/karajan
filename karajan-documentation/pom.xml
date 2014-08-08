@@ -1,0 +1,73 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.worldline.awltech.karajan</groupId>
+  <artifactId>karajan-documentation</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Karajan Documentation Project</name>
+  <build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<copy todir="./generated-docs">
+									<fileset dir="./resources" />
+								</copy>
+							</target>
+						</configuration>
+					</execution>
+					<execution>
+						<id>clean-generated-docs</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<delete includeemptydirs="true">
+									<fileset dir="generated-docs" includes="**/*" />
+								</delete>
+								<delete includeemptydirs="true">
+									<fileset dir="target" includes="**/*" />
+								</delete>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<configuration>
+					<attributes>
+						<stylesheet>css/screen.css</stylesheet>
+					</attributes>
+					<backend>html</backend>
+					<sourceDirectory>src</sourceDirectory>
+					<outputDirectory>generated-docs</outputDirectory>
+					<headerFooter>true</headerFooter>
+				</configuration>
+				<groupId>org.asciidoctor</groupId>
+				<artifactId>asciidoctor-maven-plugin</artifactId>
+				<version>0.1.3.1</version>
+				<executions>
+					<execution>
+						<id>generate-html</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>process-asciidoc</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+		</plugins>
+	</build>
+</project>

@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import com.wordline.awltech.karajan.api.BatchData;
 import com.wordline.awltech.karajan.model.Action;
-import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 
 public class OrchestratorMasterProtocol {
 	/**

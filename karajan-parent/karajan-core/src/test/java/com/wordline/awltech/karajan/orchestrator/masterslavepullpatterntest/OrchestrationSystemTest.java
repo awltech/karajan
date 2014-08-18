@@ -21,7 +21,6 @@ import com.wordline.awltech.karajan.model.ExceptionElement;
 import com.wordline.awltech.karajan.orchestrator.Orchestrator;
 import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.BatchProducer;
-import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 import com.wordline.awltech.karajan.runtime.BatchStatus;
 
 

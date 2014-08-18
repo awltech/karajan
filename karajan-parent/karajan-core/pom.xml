@@ -41,6 +41,11 @@
 			<artifactId>karajan-api</artifactId>
 			<version>${parent.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.worldline.awltech.karajan</groupId>
+			<artifactId>karajan-glue</artifactId>
+			<version>${parent.version}</version>
+		</dependency>
 	</dependencies>
 
 

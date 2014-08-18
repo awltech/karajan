@@ -11,7 +11,6 @@ import scala.concurrent.duration.Deadline;
 import akka.actor.ActorRef;
 
 import com.wordline.awltech.karajan.api.BatchData;
-import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 
 public abstract class WorkManager {
 	// protected final LoggingAdapter log = Logging.getLogger(getContext().system(), this);

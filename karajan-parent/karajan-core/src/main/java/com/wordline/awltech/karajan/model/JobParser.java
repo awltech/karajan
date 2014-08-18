@@ -49,8 +49,45 @@ public final class JobParser {
 			 return job;
 		 }
 	 
-	 private static Step parseStep(final XMLStreamReader reader, final Job job){
-		return null;
+	 private static Step parseStep(final XMLStreamReader reader, final Job job) throws XMLStreamException{
+		 final Step step = new Step(getAttributeValue(reader, XmlAttribute.ID, true));
+		 step.setNext(getAttributeValue(reader, XmlAttribute.NEXT, false));
+		 step.setRef(getAttributeValue(reader, XmlAttribute.REF, false));
+		 step.setParallelization(Integer.parseInt(getAttributeValue(reader, XmlAttribute.PARALLELIZE, false)));
+		
+		 while (reader.hasNext()) {
+			 final int eventType = reader.next();
+			 if (eventType != START_ELEMENT && eventType != END_ELEMENT) {
+				 continue;
+			 }
+			 final XmlElement element = XmlElement.forName(reader.getLocalName());
+			 switch (eventType) {
+				 case START_ELEMENT:
+					 switch (element) {
+						 case ERRORHNADLING:
+							 step.addErrorHandling(parseErrorHandling(reader));
+							 break;
+						 default:
+							// unexpectedXmlElement
+							 throw new RuntimeException();
+							 
+					 }
+				 break;
+				 case END_ELEMENT:
+				 switch (element) {
+					 case STEP:
+					 return step;
+					 default:
+					// unexpectedXmlElement
+					 throw new RuntimeException();
+				 }
+				 
+			 }
+			
+			 
+		 }
+		// unexpectedXmlElement
+		 throw new RuntimeException();
 		 
 	 }
 	 
@@ -58,10 +95,53 @@ public final class JobParser {
 		 final String val = reader.getAttributeValue(null, attribute.getLocalName());
 		 if (val == null && required) {
 			 //MESSAGES.failToGetAttribute
-		 throw new RuntimeException();
+			 throw new RuntimeException();
 		 }
 		 return val;
 		 
+	 }
+	 
+	 private static ErrorHandling parseErrorHandling(final XMLStreamReader reader) throws XMLStreamException{
+		 final ErrorHandling errorHandling=new ErrorHandling();
+		 
+		 while (reader.hasNext()) {
+			 final int eventType = reader.next();
+			 if (eventType != START_ELEMENT && eventType != END_ELEMENT) {
+				 continue;
+			 }
+			 final XmlElement element = XmlElement.forName(reader.getLocalName());
+			 switch (eventType) {
+				 case START_ELEMENT:
+					 switch (element) {
+						 case EXCEPTION:
+							 errorHandling.addExceptionElement((parseException(reader)));
+							 break;
+						 default:
+							// unexpectedXmlElement
+							 throw new RuntimeException();
+							 
+					 }
+				 break;
+				 case END_ELEMENT:
+				 switch (element) {
+					 case ERRORHNADLING:
+					 return errorHandling;
+					 default:
+					// unexpectedXmlElement
+					 throw new RuntimeException();
+				 }
+				 
+			 }
+			
+			 
+		 }
+		// unexpectedXmlElement
+		 throw new RuntimeException();
+		 
+	 }
+	 
+	 private static ExceptionElement parseException(XMLStreamReader reader)throws XMLStreamException{
+		 return null;
 	 }
 
 }

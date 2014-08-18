@@ -16,7 +16,7 @@ public class Step {
 	/**
 	 * 
 	 */
-	Step successor;
+	String next;
 	/**
 	 * Class name that contain all Step processes
 	 */
@@ -24,20 +24,23 @@ public class Step {
 	/**
 	 * Number of thread used to lunch process
 	 */
-	int parallelinstances;
+	int parallelization;
 	/**
 	 * Errors management policy
 	 */
 	List<ErrorHandling> errorshandler=new ArrayList<ErrorHandling>();
 	
 	//Constructor
-	public Step(String id,Step succ, String ref, int parallelinstances) {
+	public Step(String id,String next, String ref, int parallelization) {
 	   this.id=id;
-	   this.successor=succ;
+	   this.next=next;
 	   this.ref=ref;
-	   this.parallelinstances=parallelinstances;
+	   this.parallelization=parallelization;
 	}
-
+	
+    public Step(String id){
+    	this.id=id;
+    }
 	public String getId() {
 		return id;
 	}
@@ -46,12 +49,12 @@ public class Step {
 		this.id = id;
 	}
 
-	public Step getSuccessor() {
-		return successor;
+	public String getNext() {
+		return next;
 	}
 
-	public void setSuccessor(Step successor) {
-		this.successor = successor;
+	public void setNext(String next) {
+		this.next = next;
 	}
 
 	public String getRef() {
@@ -62,12 +65,12 @@ public class Step {
 		this.ref = ref;
 	}
 
-	public int getParallelinstances() {
-		return parallelinstances;
+	public int getParallelization() {
+		return parallelization;
 	}
 
-	public void setParallelinstances(int parallelinstances) {
-		this.parallelinstances = parallelinstances;
+	public void setParallelization(int parallelization) {
+		this.parallelization = parallelization;
 	}
 
 	public List<ErrorHandling> getErrorshandler() {
@@ -76,6 +79,10 @@ public class Step {
 
 	public void setErrorshandler(List<ErrorHandling> errorshandler) {
 		this.errorshandler = errorshandler;
+	}
+	
+	public void addErrorHandling(ErrorHandling error){
+		errorshandler.add(error);
 	}
 	
 	

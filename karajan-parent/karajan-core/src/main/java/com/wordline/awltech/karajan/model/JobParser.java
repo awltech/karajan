@@ -141,7 +141,56 @@ public final class JobParser {
 	 }
 	 
 	 private static ExceptionElement parseException(XMLStreamReader reader)throws XMLStreamException{
-		 return null;
+		 final ExceptionElement exception = new ExceptionElement();
+		 exception.setException(getAttributeValue(reader, XmlAttribute.ON, false));
+		 exception.setStategy(getStratety(getAttributeValue(reader, XmlAttribute.ON, false)));
+		 exception.setAction(getAction(getAttributeValue(reader, XmlAttribute.ON, false)));
+		
+		
+		 while (reader.hasNext()) {
+			 final int eventType = reader.next();
+			 if (eventType != START_ELEMENT && eventType != END_ELEMENT) {
+				 continue;
+			 }
+			 final XmlElement element = XmlElement.forName(reader.getLocalName());
+			 switch (eventType) {
+				 case START_ELEMENT:
+					 break;
+				 case END_ELEMENT:
+				 switch (element) {
+					 case EXCEPTION:
+					 return exception;
+					 default:
+					// unexpectedXmlElement
+					 throw new RuntimeException();
+				 }
+				 
+			 }
+			
+			 
+		 }
+		// unexpectedXmlElement
+		 throw new RuntimeException();
+	 }
+	 
+	 private static ErrorStrategy getStratety(String value){
+		 if(value.equals(ErrorStrategy.ALL)){
+			 return ErrorStrategy.ALL;
+		 }
+		 else if(value.equals(ErrorStrategy.ONE)){
+			 return ErrorStrategy.ONE;
+		 }
+		 throw new RuntimeException();
+	 }
+	 
+	 private static Action getAction(String value){
+		 if(value.equals(Action.RETRY)){
+			 return Action.RETRY;
+		 }
+		 else if(value.equals(Action.SKIPPE)){
+			 return Action.SKIPPE;
+		 }
+		 throw new RuntimeException();
 	 }
 
 }

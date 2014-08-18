@@ -53,7 +53,7 @@ public class StepExecutionManager extends UntypedActor {
 	  private BatchData<Object> currentbatch;
 	  private ActorRef orchestrator;
 	  private String id;
-	  private static  List<ErrorHandling> handlederrors;
+	  private static  ErrorHandling errorhandling;
 	//  private final SupervisorStrategy strategy;
 	  private int nbworker;
 	  /**
@@ -66,12 +66,12 @@ public class StepExecutionManager extends UntypedActor {
 	  private int finished=0;
 	 
 	//  public Master(ActorRef orchestrator, int nbworker, SupervisorStrategy strategy) {
-	  public StepExecutionManager(ActorRef orchestrator,String id, int nbworker,String implementation,List<ErrorHandling> errors) {
+	  public StepExecutionManager(ActorRef orchestrator,String id, int nbworker,String implementation,ErrorHandling errorhandling) {
 		this.orchestrator=orchestrator;
 	    this.nbworker=nbworker;
 	    this.id=id;
 	    this.implementation=implementation;
-	    handlederrors=errors;
+	    this.errorhandling=errorhandling;
 	   
 	   // this.strategy=strategy;
 	  }
@@ -81,7 +81,7 @@ public class StepExecutionManager extends UntypedActor {
 
 	    @Override
 	    public CustomSupervisorStrategy supervisorStrategy() {
-	    	CustomSupervisorStrategy.errors=handlederrors;
+	    	CustomSupervisorStrategy.errors=errorhandling.getExceptionElements();
 	    	CustomSupervisorStrategy.stepexcmanager=getSelf();
 	        return strategy;
 	    }

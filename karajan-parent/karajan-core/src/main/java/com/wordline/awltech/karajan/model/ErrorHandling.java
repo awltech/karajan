@@ -17,6 +17,11 @@ public class ErrorHandling {
 	public void addExceptionElement(ExceptionElement exception){
 		exceptionElements.add(exception);
 	}
+
+	public List<ExceptionElement> getExceptionElements() {
+		return exceptionElements;
+	}
+	
 	
 
 }

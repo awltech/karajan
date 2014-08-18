@@ -18,6 +18,7 @@ import akka.japi.Function;
 import com.wordline.awltech.karajan.model.Action;
 import com.wordline.awltech.karajan.model.ErrorHandling;
 import com.wordline.awltech.karajan.model.ErrorStrategy;
+import com.wordline.awltech.karajan.model.ExceptionElement;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol.WorkIsDone;
@@ -25,7 +26,7 @@ import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.Orchestra
 
 public class CustomSupervisorStrategy extends SupervisorStrategy{
 	
-	public static List<ErrorHandling> errors;
+	public static List<ExceptionElement> errors;
 	private static Throwable cause;
 	public static ActorRef stepexcmanager;
 	public static   ActorRef executor;
@@ -36,9 +37,9 @@ public class CustomSupervisorStrategy extends SupervisorStrategy{
 	  * 
 	  * @return
 	  */
-	private  static ErrorHandling matchExceptionToErrorHadling(){
+	private  static ExceptionElement matchExceptionToErrorHadling(){
 		if(cause!=null){
-			for(ErrorHandling error: errors){
+			for(ExceptionElement error: errors){
 				if(cause.getClass().getSimpleName().equals(error.getException())){
 					return error;
 				}
@@ -49,19 +50,19 @@ public class CustomSupervisorStrategy extends SupervisorStrategy{
 	}
 		
     public static final SupervisorStrategy defaultStrategy() {
-		final ErrorHandling errorHandling=matchExceptionToErrorHadling();
+		final ExceptionElement exceptionElement=matchExceptionToErrorHadling();
 		Function<Throwable, Directive> behavior=new Function<Throwable, Directive>(){
 			@Override
 			public Directive apply(Throwable t) throws Exception {
 				ProcessorException e=(ProcessorException)t;
-				if ( errorHandling.getStategy()==ErrorStrategy.ONE && errorHandling.getAction()==Action.SKIPPE) {
+				if ( exceptionElement.getStategy()==ErrorStrategy.ONE && exceptionElement.getAction()==Action.SKIPPE) {
 					
 				    stepexcmanager.tell(new MasterWorkerProtocol.WorkFailed(e.getWorkerId(), e.getWorkId()), ActorRef.noSender());
 				   return SupervisorStrategy.resume();
 			    }
-				else if( errorHandling.getStategy()==ErrorStrategy.ONE && errorHandling.getAction()==Action.RETRY){
+				else if( exceptionElement.getStategy()==ErrorStrategy.ONE && exceptionElement.getAction()==Action.RETRY){
 					
-					if(currentrestrart < errorHandling.getTrynumber()-1){
+					if(currentrestrart < exceptionElement.getTrynumber()-1){
 						executor.tell(new StepExecutionManager.Work(UUID.randomUUID().toString(),3), stepexcmanager);
 						return SupervisorStrategy.restart();
 					}else{
@@ -69,11 +70,11 @@ public class CustomSupervisorStrategy extends SupervisorStrategy{
 						return SupervisorStrategy.resume();
 					}
 			    }
-				else if(errorHandling.getStategy()==ErrorStrategy.ALL && errorHandling.getAction()==Action.SKIPPE){
+				else if(exceptionElement.getStategy()==ErrorStrategy.ALL && exceptionElement.getAction()==Action.SKIPPE){
 					 stepexcmanager.tell(new OrchestratorMasterProtocol.BatchFail(Action.SKIPPE), ActorRef.noSender());
 					 return SupervisorStrategy.resume();
 				}
-				else if(errorHandling.getStategy()==ErrorStrategy.ALL && errorHandling.getAction()==Action.RETRY){
+				else if(exceptionElement.getStategy()==ErrorStrategy.ALL && exceptionElement.getAction()==Action.RETRY){
 					 stepexcmanager.tell(new OrchestratorMasterProtocol.BatchFail(Action.RETRY), ActorRef.noSender());
 				}
 				return SupervisorStrategy.escalate();
@@ -81,14 +82,14 @@ public class CustomSupervisorStrategy extends SupervisorStrategy{
 			
 		};
 		
-		if(errorHandling!=null){
+		if(exceptionElement!=null){
 			//AllForOneStrategy: The strategy is applied to all the children
-			if(errorHandling.getStategy()==ErrorStrategy.ALL){
-				return new AllForOneStrategy(errorHandling.getTrynumber(),Duration.create(5,TimeUnit.SECONDS),behavior);
+			if(exceptionElement.getStategy()==ErrorStrategy.ALL){
+				return new AllForOneStrategy(exceptionElement.getTrynumber(),Duration.create(5,TimeUnit.SECONDS),behavior);
 			}
 			//OneForOneStrategy: The strategy is applied to only the children that fail
-			else if(errorHandling.getStategy()==ErrorStrategy.ONE){
-				return new OneForOneStrategy(errorHandling.getTrynumber(), Duration.create(5,TimeUnit.SECONDS),behavior);
+			else if(exceptionElement.getStategy()==ErrorStrategy.ONE){
+				return new OneForOneStrategy(exceptionElement.getTrynumber(), Duration.create(5,TimeUnit.SECONDS),behavior);
 			}
 		}
 		

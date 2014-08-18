@@ -175,20 +175,20 @@ public final class JobParser {
 	 }
 	 
 	 private static ErrorStrategy getStratety(String value){
-		 if(value.equals(ErrorStrategy.ALL.name())){
+		 if(value.equalsIgnoreCase(ErrorStrategy.ALL.name())){
 			 return ErrorStrategy.ALL;
 		 }
-		 else if(value.equals(ErrorStrategy.ONE.name())){
+		 else if(value.equalsIgnoreCase(ErrorStrategy.ONE.name())){
 			 return ErrorStrategy.ONE;
 		 }
 		 throw new RuntimeException();
 	 }
 	 
 	 private static Action getAction(String value){
-		 if(value.equals(Action.RETRY.name())){
+		 if(value.equalsIgnoreCase(Action.RETRY.name())){
 			 return Action.RETRY;
 		 }
-		 else if(value.equals(Action.SKIP.name())){
+		 else if(value.equalsIgnoreCase(Action.SKIP.name())){
 			 return Action.SKIP;
 		 }
 		 throw new RuntimeException();

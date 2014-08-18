@@ -1,4 +1,4 @@
-package com.wordline.awltech.karajan.orchestrator.model;
+package com.wordline.awltech.karajan.orchestrator;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

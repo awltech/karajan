@@ -74,7 +74,7 @@ public interface JobOperator {
 	 * @throws JobStartException
 	 * @throws JobSecurityException
 	 */
-	public long start(String jobXMLName, Iterator<?> batchdata, int batchsize) throws 
+	public long start(String jobXMLName) throws 
         JobStartException, JobSecurityException;
 
 	/**

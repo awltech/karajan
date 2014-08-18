@@ -11,6 +11,7 @@
 		<module>karajan-api</module>
 		<!-- <module>karajan-orchestrator</module> -->
 		<module>karajan-core</module>
+		<module>karajan-glue</module>
 	</modules>
 
 	<properties>

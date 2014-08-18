@@ -9,7 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.wordline.awltech.karajan.api.BatchData;
-import com.wordline.awltech.karajan.orchestrator.model.OrchestrationMemory;
+import com.wordline.awltech.karajan.orchestrator.OrchestrationMemory;
 
 public class OrchestratorMemoryTest {
 	private static OrchestrationMemory memory;

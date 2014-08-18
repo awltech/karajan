@@ -27,7 +27,6 @@ import com.wordline.awltech.karajan.model.Action;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.BatchProcessFinished;
 import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
-import com.wordline.awltech.karajan.orchestrator.model.OrchestrationMemory;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchFail;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchIsReady;

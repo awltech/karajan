@@ -10,9 +10,11 @@ public enum XmlAttribute {
     ID("id"),
     NEXT("next"),
     ON("on"),
+    REF("ref"),
     STATEGY("value"),
 	ACTION("action"),
-	NUMBEROFTRY("numberoftry");
+	TRY("try"),
+	PARALLELIZE("parallelize");
 
     private final String name;
 

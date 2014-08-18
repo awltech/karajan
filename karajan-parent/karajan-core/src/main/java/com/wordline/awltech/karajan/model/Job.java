@@ -13,6 +13,9 @@ public class Job {
 	 */
 	List<Step> steps=new ArrayList<Step>();
 	// Constructor
+	public Job(String id) {
+		this.id=id;
+	}
 	public Job(String id, List<Step> steps) {
 		this.id=id;
 		this.steps=steps;
@@ -34,6 +37,9 @@ public class Job {
 		this.steps = steps;
 	}
 	
+	public void addStep(Step step){
+		this.steps.add(step);
+	}
 	
 
 	

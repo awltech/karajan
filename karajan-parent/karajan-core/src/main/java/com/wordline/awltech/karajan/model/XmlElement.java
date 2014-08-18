@@ -9,7 +9,9 @@ public enum XmlElement {
 	    //all elements from job xml, in alphabetical order
 	    JOB("job"),
 	    STEP("step"),
-	    ERRORHNADLING("errorhandling");
+	    ERRORHNADLING("errorhandling"),
+	    EXCEPTION("exception");
+	    
 	    
 	    private final String name;
 

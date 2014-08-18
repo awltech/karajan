@@ -18,6 +18,14 @@ public class ExceptionElement {
 	 */
 	int trynumber;
 	
+	public ExceptionElement() {}
+	
+	public ExceptionElement(String exception, ErrorStrategy strategy, Action action, int numtry){
+		this.exception=exception;
+		this.stategy=strategy;
+		this.action=action;
+		this.trynumber=numtry;
+	}
 	public String getException() {
 		return exception;
 	}

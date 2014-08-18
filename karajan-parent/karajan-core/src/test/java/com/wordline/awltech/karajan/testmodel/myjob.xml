@@ -1,0 +1,13 @@
+<job id="myjob" >
+	<step id="step1" next="step2" ref="implementation1" parallelize="5">
+		<errorhandling>
+		 <exception on="ProcessorException" strategy="ALL" action="SKIP" try="5" />
+		 <exception on="RuntimeException" strategy="ONE" action="RETRY" try="1" />
+		</errorhandling>
+	</step>
+	<step id="step2"  ref="implementation2" parallelize="4">
+		<errorhandling>
+		 <exception on="Exception" strategy="ONE" action="RETRY" try="2" />
+		</errorhandling>
+	</step>
+</job>

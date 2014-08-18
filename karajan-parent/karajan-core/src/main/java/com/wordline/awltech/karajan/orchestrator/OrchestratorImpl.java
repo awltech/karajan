@@ -218,7 +218,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart, Supe
 	    	//TODO send a message to the ErrorReplicator for saving the batch
 	    	 ManagerState state = managers.get(msg.managerId);
 			 if (state != null && state.status.isBusy() ) { 
-				 if(msg.action==Action.SKIPPE){
+				 if(msg.action==Action.SKIP){
 					 managers.put(msg.managerId, state.copyWithStatus(Idle.instance));
 					System.out.println("------------->"+state.ref.path());
 					 sender.tell(new BatchAck(UUID.randomUUID().toString()), getSelf());
@@ -461,7 +461,7 @@ public class OrchestratorImpl  implements Receiver, Orchestrator, PreStart, Supe
 			for(int i=0;i<steps.size();i++){
 				ActorStep step=steps.get(i);
 				ActorRef manager=TypedActor.context().actorOf(Props.create(StepExecutionManager.class,
-						getSelf(),step.getName(),step.getCapacity(),step.getImplementation(),step.getHandlederrors()));
+						getSelf(),step.getName(),step.getCapacity(),step.getImplementation(),step.getErrorsHandler()));
 				 managers.put(step.getName(), new ManagerState(manager,Idle.instance,step));
 			}
 			

@@ -11,7 +11,7 @@ import javax.xml.stream.XMLStreamReader;
 
 public final class JobParser {
 	
-	 public static Job parseJob(final InputStream inputStream, final ClassLoader classLoader) throws XMLStreamException {
+	 public static Job parseJob(final InputStream inputStream) throws XMLStreamException {
 		 final XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);
 			 Job job = null;
 			 try {
@@ -65,7 +65,7 @@ public final class JobParser {
 				 case START_ELEMENT:
 					 switch (element) {
 						 case ERRORHNADLING:
-							 step.addErrorHandling(parseErrorHandling(reader));
+							 step.setErrorshandler(parseErrorHandling(reader));
 							 break;
 						 default:
 							// unexpectedXmlElement
@@ -143,8 +143,9 @@ public final class JobParser {
 	 private static ExceptionElement parseException(XMLStreamReader reader)throws XMLStreamException{
 		 final ExceptionElement exception = new ExceptionElement();
 		 exception.setException(getAttributeValue(reader, XmlAttribute.ON, false));
-		 exception.setStategy(getStratety(getAttributeValue(reader, XmlAttribute.ON, false)));
-		 exception.setAction(getAction(getAttributeValue(reader, XmlAttribute.ON, false)));
+		 exception.setStategy(getStratety(getAttributeValue(reader, XmlAttribute.STRATEGY, false)));
+		 exception.setAction(getAction(getAttributeValue(reader, XmlAttribute.ACTION, false)));
+		 exception.setTrynumber(Integer.parseInt(getAttributeValue(reader, XmlAttribute.TRY, false)));
 		
 		
 		 while (reader.hasNext()) {
@@ -174,21 +175,21 @@ public final class JobParser {
 	 }
 	 
 	 private static ErrorStrategy getStratety(String value){
-		 if(value.equals(ErrorStrategy.ALL)){
+		 if(value.equals(ErrorStrategy.ALL.name())){
 			 return ErrorStrategy.ALL;
 		 }
-		 else if(value.equals(ErrorStrategy.ONE)){
+		 else if(value.equals(ErrorStrategy.ONE.name())){
 			 return ErrorStrategy.ONE;
 		 }
 		 throw new RuntimeException();
 	 }
 	 
 	 private static Action getAction(String value){
-		 if(value.equals(Action.RETRY)){
+		 if(value.equals(Action.RETRY.name())){
 			 return Action.RETRY;
 		 }
-		 else if(value.equals(Action.SKIPPE)){
-			 return Action.SKIPPE;
+		 else if(value.equals(Action.SKIP.name())){
+			 return Action.SKIP;
 		 }
 		 throw new RuntimeException();
 	 }

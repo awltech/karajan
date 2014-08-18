@@ -28,7 +28,7 @@ public class Step {
 	/**
 	 * Errors management policy
 	 */
-	List<ErrorHandling> errorshandler=new ArrayList<ErrorHandling>();
+	ErrorHandling errorshandler;
 	
 	//Constructor
 	public Step(String id,String next, String ref, int parallelization) {
@@ -73,17 +73,18 @@ public class Step {
 		this.parallelization = parallelization;
 	}
 
-	public List<ErrorHandling> getErrorshandler() {
+	public ErrorHandling getErrorshandler() {
 		return errorshandler;
 	}
 
-	public void setErrorshandler(List<ErrorHandling> errorshandler) {
+	public void setErrorshandler(ErrorHandling errorshandler) {
 		this.errorshandler = errorshandler;
 	}
 	
-	public void addErrorHandling(ErrorHandling error){
-		errorshandler.add(error);
-	}
+	
+
+
+	
 	
 	
 	

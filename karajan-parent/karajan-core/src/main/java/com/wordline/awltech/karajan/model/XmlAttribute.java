@@ -11,7 +11,7 @@ public enum XmlAttribute {
     NEXT("next"),
     ON("on"),
     REF("ref"),
-    STATEGY("value"),
+    STRATEGY("strategy"),
 	ACTION("action"),
 	TRY("try"),
 	PARALLELIZE("parallelize");

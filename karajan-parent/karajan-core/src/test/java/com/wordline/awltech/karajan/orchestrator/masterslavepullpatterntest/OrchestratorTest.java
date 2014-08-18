@@ -13,6 +13,7 @@ import akka.japi.Creator;
 import com.wordline.awltech.karajan.model.Action;
 import com.wordline.awltech.karajan.model.ErrorHandling;
 import com.wordline.awltech.karajan.model.ErrorStrategy;
+import com.wordline.awltech.karajan.model.ExceptionElement;
 import com.wordline.awltech.karajan.orchestrator.Orchestrator;
 import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.BatchProducer;
@@ -36,14 +37,14 @@ public class OrchestratorTest {
 		String impl1="com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest.Implementation1";
 		String impl2="com.wordline.awltech.karajan.orchestrator.masterslavepullpatterntest.Implementation2"; 
 		// Somme Error Handling
-		ErrorHandling e1=new ErrorHandling("ProcessorException", ErrorStrategy.ONE, Action.SKIPPE, 5);
-		ErrorHandling e2=new ErrorHandling("ArithmeticException", ErrorStrategy.ONE, Action.SKIPPE, 5);
-		List<ErrorHandling> errors=new ArrayList<ErrorHandling>();
-		errors.add(e1);
-		errors.add(e2);
+		ExceptionElement e1=new ExceptionElement("ProcessorException", ErrorStrategy.ONE, Action.SKIP, 5);
+		ExceptionElement e2=new ExceptionElement("ArithmeticException", ErrorStrategy.ONE, Action.SKIP, 5);
+		ErrorHandling handler=new  ErrorHandling();
+		handler.addExceptionElement(e1);
+		handler.addExceptionElement(e2);
 		// instanciation of some steps
-		ActorStep s2=new ActorStep("step2",5, null,impl2,errors);
-		ActorStep s1=new ActorStep("step1",5, s2,impl1,errors);
+		ActorStep s2=new ActorStep("step2",5, null,impl2,handler);
+		ActorStep s1=new ActorStep("step1",5, s2,impl1,handler);
 		//Model
 		final List<ActorStep> model=new ArrayList<ActorStep>();
 		s1.setWorkRef(0);model.add(s1);

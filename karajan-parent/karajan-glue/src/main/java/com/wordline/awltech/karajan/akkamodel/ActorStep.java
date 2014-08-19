@@ -1,6 +1,7 @@
 package com.wordline.awltech.karajan.akkamodel;
 
 import com.wordline.awltech.karajan.batchmodel.ErrorHandling;
+import com.wordline.awltech.karajan.batchmodel.Step;
 
 
 
@@ -44,7 +45,12 @@ public class ActorStep {
 		this.implementation=implementation;
 		this.errorsHandler=handler;
 	}
-	
+	public ActorStep(Step step){
+		this.name=step.getId();
+		this.errorsHandler=step.getErrorshandler();
+		this.capacity=step.getParallelization();
+		this.implementation=step.getRef();
+	}
 	
 	public int getWorkRef() {
 		return workRef;

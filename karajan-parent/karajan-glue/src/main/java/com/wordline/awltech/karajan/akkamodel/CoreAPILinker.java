@@ -17,10 +17,14 @@ public class CoreAPILinker {
 		List<Step> steps=job.getSteps();
 		// we find the initial step of the model
 		int initialStepIndex=findInitialStep(steps);
-		Step pendingStep=steps.get(initialStepIndex);
+		Step pendingStep;
+		if(initialStepIndex<0){
+			throw new RuntimeException();
+		}else{
+			pendingStep=steps.get(initialStepIndex);
+			akkaModel.add(new ActorStep(pendingStep));
+		}
 		//We add the initial step to AKKAModel
-		akkaModel.add(new ActorStep(pendingStep));
-		
 		int i=0;
 		/** We iterate through Job steps and for each step we convert it to AKKA Step
 		  and set his successor
@@ -50,24 +54,28 @@ public class CoreAPILinker {
 	 * @return int
 	 */
 	private static int findInitialStep(List<Step> steps){
-		boolean jump=false;
 		int i=0;
 		while(i<steps.size()){
+			boolean jump=false;
 			int j=0;
-			while(!jump&&j<steps.size()){
-				if(steps.get(i).getId().equals(steps.get(j).getNext())){
+			while(!jump && j<steps.size()){
+				//We verify if the current element is a successor of another
+				if(j!=i && steps.get(i).getId().equals(steps.get(j).getNext())){
 					// we jump to another element 
 					jump=true;
 					i++;
 				}
+				
 				j++;
-				if(j>steps.size()){
+				
+				if(j!=i && j>=steps.size()){
 					/** We find the element that has not a precedent, this is the initial
 					element
 					*/
 					return i;
 				}
 			}
+			
 			i++;
 		}
 		return -1;
@@ -84,6 +92,7 @@ public class CoreAPILinker {
 			if(steps.get(i).getId().equals(name)){
 				return i;
 			}
+			i++;
 		}
 		return -1;
 		

@@ -30,6 +30,7 @@ public class CoreAPILinker {
 		  and set his successor
 		 */
 		while(pendingStep.getNext()!=null){
+			// We find the Successor index of the pending element
 			int succIndex=findStepByName(pendingStep.getNext(),steps);
 			if(succIndex==-1){
 				throw new RuntimeException();
@@ -38,9 +39,14 @@ public class CoreAPILinker {
 				pendingStep=steps.get(succIndex);
 				ActorStep succ=new ActorStep(steps.get(succIndex));
 				akkaModel.get(i).setSuccesor(succ);
+				//We set the Memory address to the index of the element for Pulling Work in the memory
+				akkaModel.get(i).setWorkRef(i);
 				akkaModel.add(succ);
 				i++;
+				
 			}
+			// We set the memory address for the last element
+			akkaModel.get(i).setWorkRef(i);
 		
 			
 		}

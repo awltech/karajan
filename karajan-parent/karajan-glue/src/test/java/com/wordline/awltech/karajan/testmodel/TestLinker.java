@@ -55,4 +55,17 @@ public class TestLinker {
 		Assert.assertNotNull(model);
 		Assert.assertEquals(4, model.size());
 	}
+	@Test
+	public void verifyModelActorStepRef() {
+		Assert.assertNotNull(model);
+		Assert.assertEquals(0, model.get(0).getWorkRef());
+		Assert.assertEquals(1, model.get(1).getWorkRef());
+		Assert.assertEquals(2, model.get(2).getWorkRef());
+		Assert.assertEquals(3, model.get(3).getWorkRef());
+	}
+	@Test
+	public void verifyModelLastElementSucc() {
+		Assert.assertNotNull(model);
+		Assert.assertNull(model.get(3).getSuccesor());
+	}
 }

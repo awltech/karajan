@@ -15,9 +15,9 @@ import akka.actor.OneForOneStrategy;
 import akka.actor.SupervisorStrategy;
 import akka.japi.Function;
 
-import com.wordline.awltech.karajan.model.Action;
-import com.wordline.awltech.karajan.model.ErrorStrategy;
-import com.wordline.awltech.karajan.model.ExceptionElement;
+import com.wordline.awltech.karajan.batchmodel.Action;
+import com.wordline.awltech.karajan.batchmodel.ErrorStrategy;
+import com.wordline.awltech.karajan.batchmodel.ExceptionElement;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.MasterWorkerProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;

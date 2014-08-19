@@ -14,10 +14,11 @@ import akka.actor.TypedActor;
 import akka.actor.TypedProps;
 import akka.japi.Creator;
 
-import com.wordline.awltech.karajan.model.Action;
-import com.wordline.awltech.karajan.model.ErrorHandling;
-import com.wordline.awltech.karajan.model.ErrorStrategy;
-import com.wordline.awltech.karajan.model.ExceptionElement;
+import com.wordline.awltech.karajan.akkamodel.ActorStep;
+import com.wordline.awltech.karajan.batchmodel.Action;
+import com.wordline.awltech.karajan.batchmodel.ErrorHandling;
+import com.wordline.awltech.karajan.batchmodel.ErrorStrategy;
+import com.wordline.awltech.karajan.batchmodel.ExceptionElement;
 import com.wordline.awltech.karajan.orchestrator.Orchestrator;
 import com.wordline.awltech.karajan.orchestrator.OrchestratorImpl;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.BatchProducer;

@@ -10,6 +10,7 @@ import java.util.UUID;
 import scala.concurrent.duration.Deadline;
 import akka.actor.ActorRef;
 
+import com.wordline.awltech.karajan.akkamodel.ActorStep;
 import com.wordline.awltech.karajan.api.BatchData;
 
 public abstract class WorkManager {

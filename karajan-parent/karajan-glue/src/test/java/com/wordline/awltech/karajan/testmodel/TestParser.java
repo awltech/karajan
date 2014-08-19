@@ -12,16 +12,17 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.wordline.awltech.karajan.model.ErrorHandling;
-import com.wordline.awltech.karajan.model.ExceptionElement;
-import com.wordline.awltech.karajan.model.Job;
-import com.wordline.awltech.karajan.model.JobParser;
-import com.wordline.awltech.karajan.model.Step;
+import com.wordline.awltech.karajan.batchmodel.ErrorHandling;
+import com.wordline.awltech.karajan.batchmodel.ExceptionElement;
+import com.wordline.awltech.karajan.batchmodel.Job;
+import com.wordline.awltech.karajan.batchmodel.JobParser;
+import com.wordline.awltech.karajan.batchmodel.Step;
 
 public class TestParser {
 	
 	private static String file="D:\\Utilisateurs\\A577139\\workspace\\karajan2\\karajan-parent\\"
-			+ "karajan-core\\src\\test\\java\\com\\wordline\\awltech\\karajan\\testmodel\\myjob.xml";
+			+ "karajan-glue\\src\\test\\java\\com\\wordline\\awltech\\karajan\\testmodel\\myjob.xml";
+
 	private static InputStream inputstream;
 	
 	@BeforeClass
@@ -75,6 +76,8 @@ public class TestParser {
 			Assert.assertEquals("step2", step2.getId());
 			Assert.assertEquals("implementation1", step1.getRef());
 			Assert.assertEquals("implementation2", step2.getRef()); 
+			Assert.assertEquals("step2", step1.getNext()); 
+			Assert.assertEquals(null, step2.getNext()); 
 			Assert.assertEquals(5, step1.getParallelization());
 			Assert.assertEquals(4, step2.getParallelization());
 		} catch (FileNotFoundException e) {

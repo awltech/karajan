@@ -1,4 +1,4 @@
-package com.wordline.awltech.karajan.model;
+package com.wordline.awltech.karajan.batchmodel;
 
 public class ExceptionElement {
 	/**

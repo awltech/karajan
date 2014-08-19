@@ -1,4 +1,4 @@
-package com.wordline.awltech.karajan.model;
+package com.wordline.awltech.karajan.batchmodel;
 
 import java.util.ArrayList;
 import java.util.List;

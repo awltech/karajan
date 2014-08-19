@@ -1,8 +1,8 @@
 package com.wordline.awltech.karajan.runtime;
 
-import com.wordline.awltech.karajan.model.Step;
-
 import akka.actor.ActorRef;
+
+import com.wordline.awltech.karajan.batchmodel.Step;
 
 public class StepExecutionImpl {
 	/**

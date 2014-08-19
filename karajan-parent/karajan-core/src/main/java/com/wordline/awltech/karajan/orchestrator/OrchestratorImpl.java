@@ -22,11 +22,11 @@ import akka.actor.TypedActor.Receiver;
 import akka.actor.TypedActor.Supervisor;
 import akka.japi.Function;
 
+import com.wordline.awltech.karajan.akkamodel.ActorStep;
 import com.wordline.awltech.karajan.api.BatchData;
-import com.wordline.awltech.karajan.model.Action;
+import com.wordline.awltech.karajan.batchmodel.Action;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager;
 import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.BatchProcessFinished;
-import com.wordline.awltech.karajan.orchestrator.model.ActorStep;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchFail;
 import com.wordline.awltech.karajan.orchestrator.orchestrationprotocol.OrchestratorMasterProtocol.BatchIsReady;

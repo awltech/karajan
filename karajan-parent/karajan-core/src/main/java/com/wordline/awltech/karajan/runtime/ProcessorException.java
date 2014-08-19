@@ -1,9 +1,6 @@
 package com.wordline.awltech.karajan.runtime;
 
-import akka.actor.ActorRef;
-
 import com.wordline.awltech.karajan.operations.BatchRuntimeException;
-import com.wordline.awltech.karajan.orchestrator.masterslavepullpattern.StepExecutionManager.Work;
 
 public class ProcessorException extends BatchRuntimeException {
 

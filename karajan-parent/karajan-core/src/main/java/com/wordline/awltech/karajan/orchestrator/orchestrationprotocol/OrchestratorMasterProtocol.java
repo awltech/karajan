@@ -2,8 +2,9 @@ package com.wordline.awltech.karajan.orchestrator.orchestrationprotocol;
 
 import java.io.Serializable;
 
+import com.wordline.awltech.karajan.akkamodel.ActorStep;
 import com.wordline.awltech.karajan.api.BatchData;
-import com.wordline.awltech.karajan.model.Action;
+import com.wordline.awltech.karajan.batchmodel.Action;
 
 public class OrchestratorMasterProtocol {
 	/**

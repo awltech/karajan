@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>com.worldline.awltech.karajan</groupId>
 			<artifactId>karajan-api</artifactId>
-			<version>${parent.version}</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 		<!--  
 		<dependency>

@@ -21,9 +21,9 @@ import junit.framework.Assert;
 public class TestParser {
 
 	private static final InputStream getJobInputStream() throws FileNotFoundException {
-		InputStream inputStream = TestParser.class.getResourceAsStream("/com/wordline/awltech/karajan/testmodel/myjob.xml");
+		InputStream inputStream = TestParser.class.getResourceAsStream("/myjob.xml");
 		if (inputStream == null) {
-			throw new FileNotFoundException("File not found at com/wordline/awltech/karajan/testmodel/myjob.xml");
+			throw new FileNotFoundException("File not found at myjob.xml");
 		}
 		return inputStream;
 	}
